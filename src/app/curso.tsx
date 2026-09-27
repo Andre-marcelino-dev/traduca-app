@@ -63,9 +63,11 @@ export default function CursoScreen() {
       <Text style={cursoStyles.secaoTitulo}>Conteúdo do curso</Text>
 
       {modulos.map((modulo) => (
-        <View
+        <Pressable
           key={modulo.titulo}
           style={[cursoStyles.moduloCard, estiloPorStatus[modulo.status]]}
+          disabled={modulo.status === "bloqueado"}
+          onPress={() => router.navigate("/curso-modulo")}
         >
           <View style={cursoStyles.moduloTopo}>
             <Text
@@ -115,7 +117,7 @@ export default function CursoScreen() {
               Conclua o módulo anterior para avançar
             </Text>
           )}
-        </View>
+        </Pressable>
       ))}
     </TelaComAbas>
   );

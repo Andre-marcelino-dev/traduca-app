@@ -38,7 +38,7 @@ export default function TabBarInferior() {
   return (
     <View style={tabBarStyles.container}>
       {abas.map((aba) => {
-        const ativa = pathname === aba.rota;
+        const ativa = pathname === aba.rota || pathname.startsWith(`${aba.rota}-`);
 
         return (
           <Pressable
