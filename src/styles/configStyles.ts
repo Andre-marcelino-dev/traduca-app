@@ -28,6 +28,12 @@ const configStyles = StyleSheet.create({
     tintColor: cores.branco,
   },
 
+  avatarFoto: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+
   boasVindasTitulo: {
     fontSize: 17,
     fontWeight: "bold",

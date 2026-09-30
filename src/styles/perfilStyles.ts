@@ -29,6 +29,12 @@ const perfilStyles = StyleSheet.create({
     height: 48,
   },
 
+  avatarFoto: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+  },
+
   btnCamera: {
     position: "absolute",
     right: -2,

@@ -38,6 +38,12 @@ const homeStyles = StyleSheet.create({
     height: 26,
   },
 
+  avatarFoto: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+
   boasVindas: {
     fontSize: 14,
     color: cores.preto,

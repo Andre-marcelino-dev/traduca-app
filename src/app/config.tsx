@@ -7,6 +7,7 @@ import AlterarSenhaModal from "@/components/alterar-senha-modal";
 import ModalIphone from "@/components/modal-iphone";
 import TelaComAbas from "@/components/tela-com-abas";
 import configStyles from "@/styles/configStyles";
+import { fotoAlunoUrl, logoutAluno, primeiroNomeAluno } from "@/services/api";
 import { cores } from "@/styles/variaveis";
 
 type ItemConfig = {
@@ -95,6 +96,7 @@ function ItemLista({ item }: { item: ItemConfig }) {
 export default function ConfigScreen() {
   const [modalAlterarSenhaVisivel, setModalAlterarSenhaVisivel] = useState(false);
   const [modalIphoneVisivel, setModalIphoneVisivel] = useState(false);
+  const foto = fotoAlunoUrl();
 
   return (
     <TelaComAbas
@@ -103,14 +105,18 @@ export default function ConfigScreen() {
     >
       <View style={configStyles.cardBoasVindas}>
         <View style={configStyles.avatar}>
-          <Image
-            source={require("@/assets/images/imgIcon/usuario.png")}
-            style={configStyles.avatarIcone}
-          />
+          {foto ? (
+            <Image source={{ uri: foto }} style={configStyles.avatarFoto} />
+          ) : (
+            <Image
+              source={require("@/assets/images/imgIcon/usuario.png")}
+              style={configStyles.avatarIcone}
+            />
+          )}
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={configStyles.boasVindasTitulo}>Olá, Aluno!</Text>
+          <Text style={configStyles.boasVindasTitulo}>Olá, {primeiroNomeAluno()}!</Text>
           <Text style={configStyles.boasVindasSubtitulo}>
             Acesse e organize sua experiência no app
           </Text>
@@ -171,7 +177,13 @@ export default function ConfigScreen() {
         />
       </View>
 
-      <Pressable style={configStyles.btnSair} onPress={() => router.navigate("/")}>
+      <Pressable
+        style={configStyles.btnSair}
+        onPress={async () => {
+          await logoutAluno();
+          router.replace("/");
+        }}
+      >
         <Text style={configStyles.txtBtnSair}>Sair da conta</Text>
       </Pressable>
 

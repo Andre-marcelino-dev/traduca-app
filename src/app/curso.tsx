@@ -1,25 +1,24 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 
-import { Image, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 
 import BarraProgresso from "@/components/barra-progresso";
+import EstadoVazio from "@/components/estado-vazio";
 import TelaComAbas from "@/components/tela-com-abas";
+import {
+  buscarCursos,
+  buscarModulosCurso,
+  CursoModulos,
+  formatarDuracao,
+  ModuloResumo,
+  textoAulas,
+  tituloModulo,
+} from "@/services/api";
 import cursoStyles from "@/styles/cursoStyles";
 import { cores } from "@/styles/variaveis";
 
 type StatusModulo = "concluido" | "atual" | "bloqueado";
-
-const modulos: {
-  titulo: string;
-  aulas: number;
-  duracao: string;
-  status: StatusModulo;
-}[] = [
-  { titulo: "Módulo Fundamentos 01", aulas: 8, duracao: "2h30", status: "concluido" },
-  { titulo: "Módulo Vocabulário 02", aulas: 8, duracao: "2h30", status: "concluido" },
-  { titulo: "Módulo Conversação 03", aulas: 8, duracao: "2h30", status: "atual" },
-  { titulo: "Módulo Verbalização 04", aulas: 8, duracao: "2h30", status: "bloqueado" },
-];
 
 const estiloPorStatus: Record<StatusModulo, object> = {
   concluido: cursoStyles.moduloCardConcluido,
@@ -27,7 +26,50 @@ const estiloPorStatus: Record<StatusModulo, object> = {
   bloqueado: cursoStyles.moduloCardBloqueado,
 };
 
+function statusDoModulo(modulo: ModuloResumo): StatusModulo {
+  if (modulo.concluido) return "concluido";
+  if (!modulo.liberado) return "bloqueado";
+  return "atual";
+}
+
 export default function CursoScreen() {
+  const [dados, setDados] = useState<CursoModulos | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+
+  // Busca os dados toda vez que a tela aparece (inclusive ao voltar para ela),
+  // para mostrar módulos novos e o progresso sempre atualizados.
+  useFocusEffect(
+    useCallback(() => {
+      async function carregar() {
+        try {
+          const cursos = await buscarCursos();
+          if (cursos.length === 0) {
+            setDados(null);
+            setErro("Você ainda não está matriculado em nenhum curso.");
+            return;
+          }
+          // Mostra o primeiro curso ativo do aluno.
+          setDados(await buscarModulosCurso(cursos[0].id_curso));
+          setErro("");
+        } catch (e) {
+          setErro(e instanceof Error ? e.message : "Não foi possível carregar o curso.");
+        } finally {
+          setCarregando(false);
+        }
+      }
+      carregar();
+    }, [])
+  );
+
+  const modulos = (dados?.modulos ?? []).map((modulo) => ({
+    id: modulo.id_modulo,
+    titulo: tituloModulo(modulo.nome_modulo, modulo.ordem_modulo),
+    aulas: modulo.total_aulas,
+    duracao: formatarDuracao(modulo.carga_horaria_minutos),
+    status: statusDoModulo(modulo),
+  }));
+
   return (
     <TelaComAbas titulo="Curso" subtitulo="Visualize a carga horária e conteúdo do curso">
       <View style={cursoStyles.abasLinha}>
@@ -42,6 +84,17 @@ export default function CursoScreen() {
         </Pressable>
       </View>
 
+      {carregando && <ActivityIndicator size="large" color={cores.azul} />}
+
+      {!carregando && erro ? (
+        <EstadoVazio
+          icone={require("@/assets/images/imgIcon/curso-azul.png")}
+          texto={erro}
+        />
+      ) : null}
+
+      {dados && (
+      <>
       <View style={cursoStyles.cardCargaHoraria}>
         <View style={cursoStyles.cardCargaHorariaTopo}>
           <Text style={cursoStyles.cargaHorariaLabel}>Carga Horária:</Text>
@@ -51,23 +104,29 @@ export default function CursoScreen() {
               source={require("@/assets/images/imgIcon/relogio-azul.png")}
               style={cursoStyles.cargaHorariaBadgeIcone}
             />
-            <Text style={cursoStyles.cargaHorariaBadgeTexto}>18h total</Text>
+            <Text style={cursoStyles.cargaHorariaBadgeTexto}>
+              {formatarDuracao(dados.carga_horaria_minutos)} total
+            </Text>
           </View>
         </View>
 
-        <Text style={cursoStyles.cargaHorariaResumo}>48 aulas · 6 módulos</Text>
+        <Text style={cursoStyles.cargaHorariaResumo}>
+          {textoAulas(dados.total_aulas)} · {dados.total_modulos === 1 ? "1 módulo" : `${dados.total_modulos} módulos`}
+        </Text>
 
-        <BarraProgresso porcentagem={62} cor={cores.azul} />
+        <BarraProgresso porcentagem={dados.percentual_geral} cor={cores.azul} />
       </View>
 
       <Text style={cursoStyles.secaoTitulo}>Conteúdo do curso</Text>
 
       {modulos.map((modulo) => (
         <Pressable
-          key={modulo.titulo}
+          key={modulo.id}
           style={[cursoStyles.moduloCard, estiloPorStatus[modulo.status]]}
           disabled={modulo.status === "bloqueado"}
-          onPress={() => router.navigate("/curso-modulo")}
+          onPress={() =>
+            router.navigate({ pathname: "/curso-modulo", params: { id: modulo.id } })
+          }
         >
           <View style={cursoStyles.moduloTopo}>
             <Text
@@ -85,7 +144,7 @@ export default function CursoScreen() {
           </View>
 
           <Text style={cursoStyles.moduloInfo}>
-            {modulo.aulas} aulas · {modulo.duracao}
+            {textoAulas(modulo.aulas)} · {modulo.duracao}
           </Text>
 
           {modulo.status === "concluido" && (
@@ -119,6 +178,8 @@ export default function CursoScreen() {
           )}
         </Pressable>
       ))}
+      </>
+      )}
     </TelaComAbas>
   );
 }
