@@ -20,13 +20,13 @@ Os pontos abaixo são ajustes, não problemas de estrutura.
 ## 1. Para fazer já (próxima sessão)
 
 1. ✅ **Carga horária do módulo = soma das aulas** (backend) — feito e testado no local em 30/09.
-   Falta só **enviar pelo FileZilla**: pasta `traduca_atualizacao_carga_horaria` na Área de Trabalho (ver LEIA-ME).
+   Enviado pelo FileZilla e conferido no site no ar (30/09).
 2. ✅ **Botão "Sair da conta"** agora apaga o login no servidor e no aparelho (30/09).
 3. ✅ **Tela de login** leva direto para a Home quem já está logado; login vencido volta
    sozinho para a tela de login (30/09).
-4. **Salvar o trabalho no Git.** App: tudo desta sessão está sem commit. Site: a correção do "02"
-   no cadastro de aulas (`admin/AulaController.php` + telas de aula) também está sem commit — e
-   confirmar se já foi enviada pelo FileZilla.
+4. ✅ **Trabalho salvo no Git** (30/09), só no computador — falta enviar para o GitHub:
+   app na branch `integracao-api`; site na branch `carga-horaria-soma-aulas`
+   (inclui a correção do "02", que também já foi enviada pelo FileZilla).
 5. **Confirmar a migration da Fase 3 no servidor** (pendência antiga):
    abrir `https://traduca.adminfo.dev.br/sistema/migrate/<DEPLOY_SECRET>`.
 
