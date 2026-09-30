@@ -1,6 +1,6 @@
 # Melhorias recomendadas — Traduca (app + site)
 
-Atualizado em 29/09/2026. Ordem = prioridade (o que está no topo é mais importante).
+Atualizado em 30/09/2026. Ordem = prioridade (o que está no topo é mais importante).
 
 ## Avaliação geral
 
@@ -24,28 +24,53 @@ Os pontos abaixo são ajustes, não problemas de estrutura.
 2. ✅ **Botão "Sair da conta"** agora apaga o login no servidor e no aparelho (30/09).
 3. ✅ **Tela de login** leva direto para a Home quem já está logado; login vencido volta
    sozinho para a tela de login (30/09).
-4. ✅ **Trabalho salvo no Git** (30/09), só no computador — falta enviar para o GitHub:
-   app na branch `integracao-api`; site na branch `carga-horaria-soma-aulas`
-   (inclui a correção do "02", que também já foi enviada pelo FileZilla).
-5. **Confirmar a migration da Fase 3 no servidor** (pendência antiga):
-   abrir `https://traduca.adminfo.dev.br/sistema/migrate/<DEPLOY_SECRET>`.
+4. ✅ **Trabalho salvo no GitHub** (30/09): site PR #5 e app PR #1 juntados na `main`.
+5. ✅ **Migration da Fase 3 confirmada** (30/09): os campos "Nº da aula" e "Duração em minutos"
+   salvam normalmente no site no ar — prova de que a migration rodou.
+6. ✅ **Tela Aulas ligada ao banco** (30/09), só com a API que já existia. Testada;
+   bandeiras agora são desenhadas (aparecem também no Windows). Salva no GitHub (branch `tela-aulas`).
 
-## 2. Telas do app que ainda usam dados de exemplo
+## 2. Fase 5 — telas que ainda usam dados de exemplo
 
-Já usam o banco: Login, Home (nome/foto), Config (nome/foto), Perfil (nome/e-mail/foto), Curso, Módulo, Materiais.
+Já usam o banco: Login, Home, Config, Perfil (nome/e-mail/foto), Curso, Módulo, Materiais, Aulas.
 
-Ainda com dados fixos — cada uma precisa de rota nova na API (copiando a regra do painel do aluno do site):
+As telas abaixo **não dá para fazer só no app**: a API ainda não tem essas informações.
+A boa notícia: quase tudo já existe no **painel do aluno do site** — é só criar rotas na API
+copiando a regra dos controllers de `app/Http/Controllers/aluno/` (backend).
 
-| Tela | O que falta na API |
-|---|---|
-| Aulas | lista de aulas do aluno (dá para reaproveitar a do módulo) |
-| Agenda | agenda do aluno |
-| Atividades | listar e responder atividades |
-| Desempenho | notas / frequência |
-| Perfil | telefone, idioma, nível; salvar alterações; trocar foto |
-| Alterar senha / Esqueci senha / Redefinir senha | rotas de senha |
-| Notificações (sino) | notificações |
-| Dúvida / Assistente | envio de dúvidas |
+### Como fazer cada tela (mesmo processo das outras fases)
+
+1. Criar a rota em `routes/api.php` (grupo `auth:sanctum` do aluno) + controller em
+   `app/Http/Controllers/Api/V1/Aluno/`, reaproveitando a regra do controller do site.
+2. Testar no local (Docker) com um script de teste, como feito na carga horária.
+3. Pasta na Área de Trabalho + LEIA-ME → enviar pelo FileZilla.
+4. Ligar a tela no app (função nova em `src/services/api.ts`) e testar.
+5. Commit em branch → Pull Request no GitHub.
+
+### Ordem sugerida (do mais simples/útil para o mais trabalhoso)
+
+| # | Tela do app | Rota nova na API (sugestão) | De onde copiar a regra no site | Dificuldade |
+|---|---|---|---|---|
+| 1 | **Agenda** | `GET /aluno/agenda` (aulas com data/hora) | `aluno/AulaController@index` | fácil |
+| 2 | **Perfil** (salvar e-mail, trocar foto) | `PUT /aluno/perfil/email`, `POST /aluno/perfil/foto` | `aluno/AuthController@atualizarEmail`, `@atualizarFoto` | fácil/média (foto = upload) |
+| 3 | **Alterar senha** (modal da Config) | `PUT /aluno/perfil/senha` | `aluno/AuthController@atualizarSenha` | fácil |
+| 4 | **Desempenho** | `GET /aluno/desempenho` | `aluno/ProgressoController@index` | média |
+| 5 | **Atividades** | `GET /aluno/atividades`, `GET /aluno/atividades/{id}`, `POST .../responder` | `aluno/AtividadeController@index/show/responder` | média |
+| 6 | **Dúvida** | `GET /aluno/duvidas`, `POST /aluno/duvidas` | `aluno/DuvidaController@index/store` | fácil |
+| 7 | **Assistente** (chat) | `GET /aluno/chatbot/dados`, `POST /aluno/chatbot/mensagem` | `aluno/ChatbotController@dados/mensagem` | média (já tem limite de uso) |
+| 8 | **Esqueci / Redefinir senha** | `POST /aluno/senha/esqueci`, `POST /aluno/senha/redefinir` | **não existe no site** — criar do zero (envia e-mail com código/link) | trabalhosa (precisa e-mail configurado na Locaweb) |
+| 9 | **Notificações** (sino) | `GET /aluno/notificacoes` | **não existe no site** — definir o que notificar (aula nova, atividade, material) | trabalhosa |
+
+Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/ForumController`),
+**Feedback** e **Reagendamento de aula** (`aluno/FeedbackController`, `aluno/ReagendamentoController`).
+
+### Cuidados
+
+- Telefone, idioma e nível no Perfil: idioma/nível já vêm de `/aluno/cursos`; **telefone**
+  precisa confirmar se existe na tabela do aluno antes de criar a rota.
+- Atualizar a documentação da API (`resources/views/api/documentacao.blade.php`) e o
+  `RESUMO-API-TRADUCA.md` a cada rota nova.
+- Nenhuma dessas rotas deve precisar de migration, exceto Esqueci senha e Notificações.
 
 ## 3. Melhorias de segurança e qualidade
 
@@ -53,10 +78,10 @@ Ainda com dados fixos — cada uma precisa de rota nova na API (copiando a regra
   que é aceitável para testes, mas no celular o SecureStore é o recomendado. No navegador continua como está.
 - **Endereço da API configurável** (`EXPO_PUBLIC_API_URL`). Assim dá para testar com o banco local
   (`localhost:8081`) sem mexer no código — evita a confusão "cadastrei no local e não aparece no app".
-- **Aluno com mais de um curso:** hoje o app mostra só o primeiro. Colocar uma escolha de curso.
+- **Aluno com mais de um curso:** a tela Aulas já deixa escolher o idioma; Curso e Materiais
+  ainda mostram só o primeiro curso. Guardar o curso escolhido e usar nas três telas.
 - **Tamanho do arquivo nos Materiais:** a API não envia; incluir no backend (`tamanho_bytes`).
-- **Limpeza pequena no código:** `index.tsx` importa `ScrollView` e `SafeAreaView` sem usar;
-  indentação irregular no login. Rodar `npm run lint` de vez em quando.
+- **Limpeza pequena no código:** indentação irregular no login. Rodar `npm run lint` de vez em quando.
 - **Publicação do site só pelo FileZilla:** funciona, mas é fácil esquecer um arquivo. No futuro,
   vale um deploy automático pelo GitHub (a Locaweb aceita FTP em GitHub Actions) — só se você quiser.
 
