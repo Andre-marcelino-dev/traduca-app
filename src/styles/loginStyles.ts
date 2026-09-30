@@ -93,6 +93,13 @@ const loginStyles = StyleSheet.create({
   btnEntrarPressed: {
     opacity: 0.8,
   },
+
+  txtErro: {
+    marginTop: 10,
+    fontSize: 14,
+    color: cores.vermelho,
+    textAlign: "center",
+  },
 });
  
 export default loginStyles;

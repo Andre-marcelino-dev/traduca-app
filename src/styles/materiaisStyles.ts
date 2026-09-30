@@ -149,6 +149,37 @@ const materiaisStyles = StyleSheet.create({
     color: cores.cinzaEscuro,
     textAlign: "center",
   },
+
+  opcoesModulo: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: -6,
+    marginBottom: 16,
+  },
+
+  campoBusca: {
+    borderWidth: 1,
+    borderColor: cores.cinza,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    fontSize: 13,
+    marginTop: -8,
+    marginBottom: 16,
+  },
+
+  materialConcluido: {
+    color: cores.verde,
+    fontWeight: "bold",
+  },
+
+  txtErro: {
+    fontSize: 13,
+    color: cores.vermelho,
+    textAlign: "center",
+    marginBottom: 12,
+  },
 });
 
 export default materiaisStyles;

@@ -7,19 +7,27 @@ import BandeiraIdioma from "@/components/bandeira-idioma";
 import FotoPerfilModal from "@/components/foto-perfil-modal";
 import TelaComAbas from "@/components/tela-com-abas";
 import perfilStyles from "@/styles/perfilStyles";
+import { fotoAlunoUrl, sessao } from "@/services/api";
 
 export default function PerfilScreen() {
   const [modalFotoVisivel, setModalFotoVisivel] = useState(false);
+  const foto = fotoAlunoUrl();
+  const nome = sessao.aluno?.nome_aluno ?? "";
+  const email = sessao.aluno?.email_aluno ?? "";
 
   return (
     <TelaComAbas titulo="Perfil">
       <View style={perfilStyles.cardPerfil}>
         <View style={perfilStyles.avatarWrapper}>
           <View style={perfilStyles.avatar}>
-            <Image
-              source={require("@/assets/images/imgIcon/usuario.png")}
-              style={perfilStyles.avatarIcone}
-            />
+            {foto ? (
+              <Image source={{ uri: foto }} style={perfilStyles.avatarFoto} />
+            ) : (
+              <Image
+                source={require("@/assets/images/imgIcon/usuario.png")}
+                style={perfilStyles.avatarIcone}
+              />
+            )}
           </View>
 
           <Pressable
@@ -33,7 +41,7 @@ export default function PerfilScreen() {
           </Pressable>
         </View>
 
-        <Text style={perfilStyles.nome}>Célia Fonseca</Text>
+        <Text style={perfilStyles.nome}>{nome}</Text>
 
         <View style={perfilStyles.statusBadge}>
           <Text style={perfilStyles.statusBadgeTexto}>Aluno(a) Ativo(a)</Text>
@@ -52,7 +60,7 @@ export default function PerfilScreen() {
             />
             <TextInput
               style={perfilStyles.campoTextInput}
-              defaultValue="Célia Fonseca"
+              defaultValue={nome}
               placeholderTextColor="#888888"
             />
           </View>
@@ -83,7 +91,7 @@ export default function PerfilScreen() {
             />
             <TextInput
               style={perfilStyles.campoTextInput}
-              defaultValue="celia.fonseca@email.com"
+              defaultValue={email}
               keyboardType="email-address"
               autoCapitalize="none"
               placeholderTextColor="#888888"
