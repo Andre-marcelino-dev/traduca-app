@@ -149,6 +149,38 @@ const materiaisStyles = StyleSheet.create({
     color: cores.cinzaEscuro,
     textAlign: "center",
   },
+
+  seletorSobrepor: {
+    flex: 1,
+    backgroundColor: cores.preto80,
+    justifyContent: "center",
+    padding: 24,
+  },
+
+  seletorPainel: {
+    backgroundColor: cores.branco,
+    borderWidth: 2,
+    borderColor: cores.azul,
+    borderRadius: 16,
+    paddingVertical: 8,
+  },
+
+  seletorOpcao: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: cores.cinza,
+  },
+
+  seletorOpcaoTexto: {
+    fontSize: 14,
+    color: cores.preto,
+  },
+
+  seletorOpcaoTextoSelecionada: {
+    color: cores.azul,
+    fontWeight: "bold",
+  },
 });
 
 export default materiaisStyles;

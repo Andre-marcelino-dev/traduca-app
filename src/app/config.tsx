@@ -6,6 +6,7 @@ import { Image, Pressable, Switch, Text, View } from "react-native";
 import AlterarSenhaModal from "@/components/alterar-senha-modal";
 import ModalIphone from "@/components/modal-iphone";
 import TelaComAbas from "@/components/tela-com-abas";
+import { apiFetch, encerrarSessao } from "@/services/api";
 import configStyles from "@/styles/configStyles";
 import { cores } from "@/styles/variaveis";
 
@@ -171,7 +172,19 @@ export default function ConfigScreen() {
         />
       </View>
 
-      <Pressable style={configStyles.btnSair} onPress={() => router.navigate("/")}>
+      <Pressable
+        style={configStyles.btnSair}
+        onPress={async () => {
+          try {
+            await apiFetch("/aluno/logout", { method: "POST" });
+          } catch {
+            // mesmo se a chamada falhar, encerramos a sessão localmente
+          }
+
+          await encerrarSessao();
+          router.replace("/");
+        }}
+      >
         <Text style={configStyles.txtBtnSair}>Sair da conta</Text>
       </Pressable>
 

@@ -4,11 +4,12 @@ import { Alert, Linking, Pressable, Text, TextInput, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 import TelaComAbas from "@/components/tela-com-abas";
+import { WHATSAPP_PROFESSOR } from "@/constants/contato";
 import duvidaStyles from "@/styles/duvidaStyles";
 import { cores } from "@/styles/variaveis";
 
-const WHATSAPP_NUMERO = "5511988161211";
-const EMAIL_CONTATO = "anddrem89@gmail.com";
+const WHATSAPP_NUMERO = WHATSAPP_PROFESSOR;
+const EMAIL_CONTATO = "rpmcaetano@gmail.com";
 
 function formatarWhatsapp(numero: string) {
   const semDDI = numero.replace(/^55/, "");

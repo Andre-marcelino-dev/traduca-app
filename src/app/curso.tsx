@@ -1,25 +1,47 @@
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 
-import { Image, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 
 import BarraProgresso from "@/components/barra-progresso";
 import TelaComAbas from "@/components/tela-com-abas";
+import { apiFetch, ApiError, formatarDuracao } from "@/services/api";
 import cursoStyles from "@/styles/cursoStyles";
 import { cores } from "@/styles/variaveis";
 
 type StatusModulo = "concluido" | "atual" | "bloqueado";
 
-const modulos: {
-  titulo: string;
-  aulas: number;
-  duracao: string;
-  status: StatusModulo;
-}[] = [
-  { titulo: "Módulo Fundamentos 01", aulas: 8, duracao: "2h30", status: "concluido" },
-  { titulo: "Módulo Vocabulário 02", aulas: 8, duracao: "2h30", status: "concluido" },
-  { titulo: "Módulo Conversação 03", aulas: 8, duracao: "2h30", status: "atual" },
-  { titulo: "Módulo Verbalização 04", aulas: 8, duracao: "2h30", status: "bloqueado" },
-];
+type CursoAluno = {
+  id_curso: number;
+  nome_curso: string;
+  id_nivel: number;
+  nome_nivel: string;
+};
+
+type ModuloApi = {
+  id_modulo: number;
+  ordem_modulo: number;
+  nome_modulo: string;
+  descricao_modulo: string;
+  carga_horaria_minutos: number;
+  total_aulas: number;
+  aulas_concluidas: number;
+  percentual: number;
+  concluido: boolean;
+  liberado: boolean;
+  em_andamento: boolean;
+};
+
+type CursoModulosApi = {
+  curso: string;
+  nivel: string;
+  carga_horaria_minutos: number;
+  total_modulos: number;
+  total_aulas: number;
+  aulas_concluidas: number;
+  percentual_geral: number;
+  modulos: ModuloApi[];
+};
 
 const estiloPorStatus: Record<StatusModulo, object> = {
   concluido: cursoStyles.moduloCardConcluido,
@@ -27,7 +49,54 @@ const estiloPorStatus: Record<StatusModulo, object> = {
   bloqueado: cursoStyles.moduloCardBloqueado,
 };
 
+function statusDoModulo(modulo: ModuloApi): StatusModulo {
+  if (modulo.concluido) return "concluido";
+  if (!modulo.liberado) return "bloqueado";
+  return "atual";
+}
+
 export default function CursoScreen() {
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const [dados, setDados] = useState<CursoModulosApi | null>(null);
+
+  useEffect(() => {
+    carregarCurso();
+  }, []);
+
+  async function carregarCurso() {
+    setCarregando(true);
+    setErro("");
+
+    try {
+      const cursosResposta = await apiFetch<{ success: boolean; data: CursoAluno[] }>(
+        "/aluno/cursos",
+      );
+
+      const curso = cursosResposta.data[0];
+
+      if (!curso) {
+        setDados(null);
+        return;
+      }
+
+      const modulosResposta = await apiFetch<{ success: boolean; data: CursoModulosApi }>(
+        `/aluno/cursos/${curso.id_curso}/modulos`,
+      );
+
+      setDados(modulosResposta.data);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        router.replace("/");
+        return;
+      }
+
+      setErro(e instanceof ApiError ? e.message : "Sem conexão com o servidor. Tente novamente.");
+    } finally {
+      setCarregando(false);
+    }
+  }
+
   return (
     <TelaComAbas titulo="Curso" subtitulo="Visualize a carga horária e conteúdo do curso">
       <View style={cursoStyles.abasLinha}>
@@ -42,83 +111,123 @@ export default function CursoScreen() {
         </Pressable>
       </View>
 
-      <View style={cursoStyles.cardCargaHoraria}>
-        <View style={cursoStyles.cardCargaHorariaTopo}>
-          <Text style={cursoStyles.cargaHorariaLabel}>Carga Horária:</Text>
-
-          <View style={cursoStyles.cargaHorariaBadge}>
-            <Image
-              source={require("@/assets/images/imgIcon/relogio-azul.png")}
-              style={cursoStyles.cargaHorariaBadgeIcone}
-            />
-            <Text style={cursoStyles.cargaHorariaBadgeTexto}>18h total</Text>
-          </View>
+      {carregando && (
+        <View style={{ paddingVertical: 40, alignItems: "center" }}>
+          <ActivityIndicator color={cores.azul} />
         </View>
+      )}
 
-        <Text style={cursoStyles.cargaHorariaResumo}>48 aulas · 6 módulos</Text>
+      {!carregando && erro !== "" && (
+        <View style={{ paddingVertical: 24, alignItems: "center" }}>
+          <Text style={{ color: cores.vermelho, textAlign: "center", marginBottom: 12 }}>
+            {erro}
+          </Text>
+          <Pressable onPress={carregarCurso}>
+            <Text style={{ color: cores.azul, fontWeight: "bold" }}>Tentar novamente</Text>
+          </Pressable>
+        </View>
+      )}
 
-        <BarraProgresso porcentagem={62} cor={cores.azul} />
-      </View>
+      {!carregando && erro === "" && !dados && (
+        <View style={{ paddingVertical: 24, alignItems: "center" }}>
+          <Text style={{ color: cores.cinzaEscuro, textAlign: "center" }}>
+            Você ainda não está matriculado(a) em nenhum curso.
+          </Text>
+        </View>
+      )}
 
-      <Text style={cursoStyles.secaoTitulo}>Conteúdo do curso</Text>
+      {!carregando && dados && (
+        <>
+          <View style={cursoStyles.cardCargaHoraria}>
+            <View style={cursoStyles.cardCargaHorariaTopo}>
+              <Text style={cursoStyles.cargaHorariaLabel}>Carga Horária:</Text>
 
-      {modulos.map((modulo) => (
-        <Pressable
-          key={modulo.titulo}
-          style={[cursoStyles.moduloCard, estiloPorStatus[modulo.status]]}
-          disabled={modulo.status === "bloqueado"}
-          onPress={() => router.navigate("/curso-modulo")}
-        >
-          <View style={cursoStyles.moduloTopo}>
-            <Text
-              style={[
-                cursoStyles.moduloTitulo,
-                modulo.status === "bloqueado" && cursoStyles.moduloTituloBloqueado,
-              ]}
-            >
-              {modulo.titulo}
+              <View style={cursoStyles.cargaHorariaBadge}>
+                <Image
+                  source={require("@/assets/images/imgIcon/relogio-azul.png")}
+                  style={cursoStyles.cargaHorariaBadgeIcone}
+                />
+                <Text style={cursoStyles.cargaHorariaBadgeTexto}>
+                  {formatarDuracao(dados.carga_horaria_minutos)} total
+                </Text>
+              </View>
+            </View>
+
+            <Text style={cursoStyles.cargaHorariaResumo}>
+              {dados.total_aulas} aulas · {dados.total_modulos} módulos
             </Text>
 
-            {modulo.status === "atual" && (
-              <Text style={cursoStyles.moduloTag}>Você está aqui</Text>
-            )}
+            <BarraProgresso porcentagem={dados.percentual_geral} cor={cores.azul} />
           </View>
 
-          <Text style={cursoStyles.moduloInfo}>
-            {modulo.aulas} aulas · {modulo.duracao}
-          </Text>
+          <Text style={cursoStyles.secaoTitulo}>Conteúdo do curso</Text>
 
-          {modulo.status === "concluido" && (
-            <View style={cursoStyles.moduloStatusLinha}>
-              <Image
-                source={require("@/assets/images/imgIcon/check.png")}
-                style={cursoStyles.moduloStatusIcone}
-              />
-              <Text style={[cursoStyles.moduloStatusTexto, { color: cores.verde }]}>
-                Concluído
-              </Text>
-            </View>
-          )}
+          {dados.modulos.map((modulo) => {
+            const status = statusDoModulo(modulo);
 
-          {modulo.status === "atual" && (
-            <View style={cursoStyles.moduloStatusLinha}>
-              <Image
-                source={require("@/assets/images/imgIcon/play.png")}
-                style={[cursoStyles.moduloStatusIcone, { tintColor: cores.azul }]}
-              />
-              <Text style={[cursoStyles.moduloStatusTexto, { color: cores.azul }]}>
-                Em andamento
-              </Text>
-            </View>
-          )}
+            return (
+              <Pressable
+                key={modulo.id_modulo}
+                style={[cursoStyles.moduloCard, estiloPorStatus[status]]}
+                disabled={status === "bloqueado"}
+                onPress={() =>
+                  router.navigate({
+                    pathname: "/curso-modulo",
+                    params: { modulo: String(modulo.id_modulo) },
+                  })
+                }
+              >
+                <View style={cursoStyles.moduloTopo}>
+                  <Text
+                    style={[
+                      cursoStyles.moduloTitulo,
+                      status === "bloqueado" && cursoStyles.moduloTituloBloqueado,
+                    ]}
+                  >
+                    {modulo.nome_modulo}
+                  </Text>
 
-          {modulo.status === "bloqueado" && (
-            <Text style={cursoStyles.moduloBloqueadoTexto}>
-              Conclua o módulo anterior para avançar
-            </Text>
-          )}
-        </Pressable>
-      ))}
+                  {status === "atual" && <Text style={cursoStyles.moduloTag}>Você está aqui</Text>}
+                </View>
+
+                <Text style={cursoStyles.moduloInfo}>
+                  {modulo.total_aulas} aulas · {formatarDuracao(modulo.carga_horaria_minutos)}
+                </Text>
+
+                {status === "concluido" && (
+                  <View style={cursoStyles.moduloStatusLinha}>
+                    <Image
+                      source={require("@/assets/images/imgIcon/check.png")}
+                      style={cursoStyles.moduloStatusIcone}
+                    />
+                    <Text style={[cursoStyles.moduloStatusTexto, { color: cores.verde }]}>
+                      Concluído
+                    </Text>
+                  </View>
+                )}
+
+                {status === "atual" && (
+                  <View style={cursoStyles.moduloStatusLinha}>
+                    <Image
+                      source={require("@/assets/images/imgIcon/play.png")}
+                      style={[cursoStyles.moduloStatusIcone, { tintColor: cores.azul }]}
+                    />
+                    <Text style={[cursoStyles.moduloStatusTexto, { color: cores.azul }]}>
+                      Em andamento
+                    </Text>
+                  </View>
+                )}
+
+                {status === "bloqueado" && (
+                  <Text style={cursoStyles.moduloBloqueadoTexto}>
+                    Conclua o módulo anterior para avançar
+                  </Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </>
+      )}
     </TelaComAbas>
   );
 }
