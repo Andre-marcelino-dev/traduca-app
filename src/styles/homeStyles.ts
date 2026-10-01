@@ -39,8 +39,8 @@ const homeStyles = StyleSheet.create({
   },
 
   avatarFoto: {
-    width: "100%",
-    height: "100%",
+    width: 44,
+    height: 44,
     borderRadius: 22,
   },
 

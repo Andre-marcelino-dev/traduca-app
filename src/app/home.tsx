@@ -1,12 +1,12 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CentralNotificacoesModal from "@/components/central-notificacoes-modal";
-import { Aluno, obterAlunoSalvo, urlFotoAluno } from "@/services/api";
 import homeStyles from "@/styles/homeStyles";
+import { fotoAlunoUrl, primeiroNomeAluno } from "@/services/api";
 
 const menuItens = [
   {
@@ -43,22 +43,15 @@ const menuItens = [
 
 export default function HomeScreen() {
   const [modalNotificacoesVisivel, setModalNotificacoesVisivel] = useState(false);
-  const [aluno, setAluno] = useState<Aluno | null>(null);
-
-  useEffect(() => {
-    obterAlunoSalvo().then(setAluno);
-  }, []);
+  const foto = fotoAlunoUrl();
 
   return (
     <SafeAreaView style={homeStyles.container} edges={["top"]}>
       <View style={homeStyles.cabecalho}>
         <View style={homeStyles.cabecalhoEsquerda}>
           <View style={homeStyles.avatar}>
-            {aluno?.foto_aluno ? (
-              <Image
-                source={{ uri: urlFotoAluno(aluno.foto_aluno) }}
-                style={homeStyles.avatarFoto}
-              />
+            {foto ? (
+              <Image source={{ uri: foto }} style={homeStyles.avatarFoto} />
             ) : (
               <Image
                 source={require("@/assets/images/imgIcon/usuario.png")}
@@ -69,7 +62,7 @@ export default function HomeScreen() {
 
           <View>
             <Text style={homeStyles.boasVindas}>Bem-vindo</Text>
-            <Text style={homeStyles.nomeAluno}>{aluno?.nome_aluno ?? "Aluno"}!</Text>
+            <Text style={homeStyles.nomeAluno}>{primeiroNomeAluno()}!</Text>
           </View>
         </View>
 

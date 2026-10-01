@@ -1,1 +1,2 @@
 @AGENTS.md
+@RESUMO-API-TRADUCA.md

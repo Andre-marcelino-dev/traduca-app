@@ -1,191 +1,141 @@
-import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useState } from "react";
 
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
+import EstadoVazio from "@/components/estado-vazio";
 import TelaComAbas from "@/components/tela-com-abas";
-import { apiFetch, ApiError } from "@/services/api";
+import { buscarModulo, formatarDuracao, ModuloDetalhe, textoAulas } from "@/services/api";
 import cursoModuloStyles from "@/styles/cursoModuloStyles";
 import { cores } from "@/styles/variaveis";
 
-type AulaApi = {
-  id_aula: number;
-  numero: number;
-  titulo: string;
-  descricao: string;
-  data: string;
-  hora: string;
-  duracao_minutos: number | null;
-  ao_vivo: boolean;
-  link_aula: string | null;
-  professor: string;
-  presenca: "presente" | "falta" | "justificado" | null;
-  concluida: boolean;
-};
-
-type ModuloDetalheApi = {
-  curso: string;
-  nivel: string;
-  modulo: {
-    id_modulo: number;
-    ordem_modulo: number;
-    nome_modulo: string;
-    descricao_modulo: string;
-    carga_horaria_minutos: number;
-  };
-  progresso: {
-    total_aulas: number;
-    aulas_concluidas: number;
-    percentual: number;
-    concluido: boolean;
-  };
-  proximo_modulo: { id_modulo: number; nome_modulo: string; liberado: boolean } | null;
-  aulas: AulaApi[];
-};
+// Número com dois dígitos: 1 → "01".
+const doisDigitos = (n: number) => String(n).padStart(2, "0");
 
 export default function CursoModuloScreen() {
-  const { modulo: idModuloParam } = useLocalSearchParams<{ modulo?: string }>();
-
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [dados, setDados] = useState<ModuloDetalhe | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const [dados, setDados] = useState<ModuloDetalheApi | null>(null);
 
-  useEffect(() => {
-    carregarModulo();
-  }, [idModuloParam]);
-
-  async function carregarModulo() {
-    if (!idModuloParam) {
-      setErro("Módulo não informado.");
-      setCarregando(false);
-      return;
-    }
-
-    setCarregando(true);
-    setErro("");
-
-    try {
-      const resposta = await apiFetch<{ success: boolean; data: ModuloDetalheApi }>(
-        `/aluno/modulos/${idModuloParam}`,
-      );
-
-      setDados(resposta.data);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 401) {
-        router.replace("/");
+  // Busca os dados toda vez que a tela aparece (inclusive ao voltar para ela).
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) {
+        setErro("Escolha um módulo na tela Curso.");
+        setCarregando(false);
         return;
       }
 
-      setErro(e instanceof ApiError ? e.message : "Sem conexão com o servidor. Tente novamente.");
-    } finally {
-      setCarregando(false);
-    }
-  }
+      buscarModulo(id)
+        .then((resposta) => {
+          setDados(resposta);
+          setErro("");
+        })
+        .catch((e) => {
+          setDados(null);
+          setErro(e instanceof Error ? e.message : "Não foi possível carregar o módulo.");
+        })
+        .finally(() => setCarregando(false));
+    }, [id])
+  );
+
+  const modulo = dados?.modulo;
+  const progresso = dados?.progresso;
+  const aulas = dados?.aulas ?? [];
+  const proximo = dados?.proximo_modulo;
 
   return (
     <TelaComAbas titulo="Curso" subtitulo="Visualizar a carga horária e conteúdo do curso">
-      {carregando && (
-        <View style={{ paddingVertical: 40, alignItems: "center" }}>
-          <ActivityIndicator color={cores.azul} />
+      {carregando && <ActivityIndicator size="large" color={cores.azul} />}
+
+      {!carregando && erro ? (
+        <EstadoVazio
+          icone={require("@/assets/images/imgIcon/curso-azul.png")}
+          texto={erro}
+        />
+      ) : null}
+
+      {!carregando && dados && modulo && progresso && (
+      <>
+      <View style={cursoModuloStyles.cardModulo}>
+        <Text style={cursoModuloStyles.moduloEtiqueta}>
+          {dados.curso.toUpperCase()} | MÓDULO {doisDigitos(modulo.ordem_modulo)}
+        </Text>
+        <Text style={cursoModuloStyles.moduloTitulo}>{modulo.nome_modulo}</Text>
+        {modulo.descricao_modulo ? (
+          <Text style={cursoModuloStyles.moduloDescricao}>{modulo.descricao_modulo}</Text>
+        ) : null}
+
+        <View style={cursoModuloStyles.moduloInfoLinha}>
+          <Text style={cursoModuloStyles.moduloInfo}>
+            {textoAulas(progresso.total_aulas)} · {formatarDuracao(modulo.carga_horaria_minutos)} · {dados.nivel}
+          </Text>
         </View>
+      </View>
+
+      <View style={cursoModuloStyles.progressoTopo}>
+        <Text style={cursoModuloStyles.progressoLabel}>PROGRESSO DO MÓDULO</Text>
+        <Text style={cursoModuloStyles.progressoPorcentagem}>{progresso.percentual}%</Text>
+      </View>
+
+      <View style={cursoModuloStyles.progressoTrilha}>
+        <View style={[cursoModuloStyles.progressoPreenchimento, { width: `${progresso.percentual}%` }]} />
+      </View>
+
+      <Text style={cursoModuloStyles.progressoResumo}>
+        {progresso.aulas_concluidas} de {textoAulas(progresso.total_aulas)}{" "}
+        {progresso.total_aulas === 1 ? "concluída" : "concluídas"}
+      </Text>
+
+      <Text style={cursoModuloStyles.secaoTitulo}>Aulas</Text>
+
+      {aulas.length === 0 && (
+        <Text style={cursoModuloStyles.progressoResumo}>Nenhuma aula cadastrada neste módulo.</Text>
       )}
 
-      {!carregando && erro !== "" && (
-        <View style={{ paddingVertical: 24, alignItems: "center" }}>
-          <Text style={{ color: cores.vermelho, textAlign: "center", marginBottom: 12 }}>
-            {erro}
+      {aulas.map((aula) => (
+        <View
+          key={aula.id_aula}
+          style={[cursoModuloStyles.cardAula, aula.concluida && cursoModuloStyles.cardAulaConcluida]}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={cursoModuloStyles.aulaEtiqueta}>AULA {doisDigitos(aula.numero)}</Text>
+            <Text style={cursoModuloStyles.aulaTitulo}>{aula.titulo}</Text>
+            <Text style={cursoModuloStyles.aulaInfo}>
+              {aula.duracao_minutos ? `${aula.duracao_minutos} min · ` : ""}
+              {aula.ao_vivo ? "Aula ao vivo" : "Aula"}
+            </Text>
+          </View>
+
+          <Text
+            style={[
+              cursoModuloStyles.aulaStatus,
+              { color: aula.concluida ? cores.verde : cores.cinzaEscuro },
+            ]}
+          >
+            {aula.concluida ? "Concluída" : "Pendente"}
           </Text>
-          <Pressable onPress={() => router.navigate("/curso")}>
-            <Text style={{ color: cores.azul, fontWeight: "bold" }}>Voltar para o curso</Text>
-          </Pressable>
         </View>
-      )}
+      ))}
 
-      {!carregando && dados && (
-        <>
-          <View style={cursoModuloStyles.cardModulo}>
-            <Text style={cursoModuloStyles.moduloEtiqueta}>
-              {dados.curso.toUpperCase()} | MÓDULO{" "}
-              {String(dados.modulo.ordem_modulo).padStart(2, "0")}
-            </Text>
-            <Text style={cursoModuloStyles.moduloTitulo}>{dados.modulo.nome_modulo}</Text>
-            <Text style={cursoModuloStyles.moduloDescricao}>{dados.modulo.descricao_modulo}</Text>
-
-            <View style={cursoModuloStyles.moduloInfoLinha}>
-              <Text style={cursoModuloStyles.moduloInfo}>
-                {dados.progresso.total_aulas} aulas · {dados.nivel}
-              </Text>
-            </View>
-          </View>
-
-          <View style={cursoModuloStyles.progressoTopo}>
-            <Text style={cursoModuloStyles.progressoLabel}>PROGRESSO DO MÓDULO</Text>
-            <Text style={cursoModuloStyles.progressoPorcentagem}>
-              {dados.progresso.percentual}%
-            </Text>
-          </View>
-
-          <View style={cursoModuloStyles.progressoTrilha}>
-            <View
-              style={[
-                cursoModuloStyles.progressoPreenchimento,
-                { width: `${dados.progresso.percentual}%` },
-              ]}
-            />
-          </View>
-
-          <Text style={cursoModuloStyles.progressoResumo}>
-            {dados.progresso.aulas_concluidas} de {dados.progresso.total_aulas} aulas concluídas
+      {progresso.concluido && (
+        <Pressable
+          style={cursoModuloStyles.btnProximoModulo}
+          onPress={() =>
+            proximo
+              ? router.push({ pathname: "/curso-modulo", params: { id: proximo.id_modulo } })
+              : router.navigate("/curso")
+          }
+        >
+          <Text style={cursoModuloStyles.btnProximoModuloTexto}>
+            {proximo
+              ? "Todas as aulas concluídas, siga para o próximo módulo →"
+              : "Parabéns! Você concluiu o último módulo do curso →"}
           </Text>
-
-          <Text style={cursoModuloStyles.secaoTitulo}>Aulas</Text>
-
-          {dados.aulas.map((aula) => (
-            <View
-              key={aula.id_aula}
-              style={[
-                cursoModuloStyles.cardAula,
-                aula.concluida && cursoModuloStyles.cardAulaConcluida,
-              ]}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={cursoModuloStyles.aulaEtiqueta}>
-                  AULA {String(aula.numero).padStart(2, "0")}
-                </Text>
-                <Text style={cursoModuloStyles.aulaTitulo}>{aula.titulo}</Text>
-                <Text style={cursoModuloStyles.aulaInfo}>
-                  {aula.duracao_minutos !== null ? `${aula.duracao_minutos} min · ` : ""}
-                  {aula.ao_vivo ? "Aula ao vivo" : "Gravada"}
-                </Text>
-              </View>
-
-              <Text
-                style={[
-                  cursoModuloStyles.aulaStatus,
-                  { color: aula.concluida ? cores.verde : cores.cinzaEscuro },
-                ]}
-              >
-                {aula.concluida ? "Concluída" : "Pendente"}
-              </Text>
-            </View>
-          ))}
-
-          {dados.progresso.concluido && dados.proximo_modulo && (
-            <Pressable
-              style={cursoModuloStyles.btnProximoModulo}
-              onPress={() =>
-                router.navigate({
-                  pathname: "/curso-modulo",
-                  params: { modulo: String(dados.proximo_modulo!.id_modulo) },
-                })
-              }
-            >
-              <Text style={cursoModuloStyles.btnProximoModuloTexto}>
-                Todas as aulas concluídas, siga para o próximo módulo →
-              </Text>
-            </Pressable>
-          )}
-        </>
+        </Pressable>
+      )}
+      </>
       )}
     </TelaComAbas>
   );
