@@ -206,6 +206,36 @@ export function buscarMateriais(idCurso: number) {
   return apiGet<Material[]>(`/aluno/cursos/${idCurso}/materiais`);
 }
 
+// Envia dados pra API usando o token do aluno logado.
+async function apiPost<T>(caminho: string, corpo: unknown): Promise<T> {
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${API_URL}${caminho}`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessao.token}`,
+      },
+      body: JSON.stringify(corpo),
+    });
+  } catch {
+    throw new Error("Sem conexão com o servidor. Verifique sua internet.");
+  }
+
+  const json = await resposta.json().catch(() => null);
+
+  if (resposta.status === 401) {
+    await limparSessao();
+    router.replace("/");
+    throw new Error("Sua sessão expirou. Faça login novamente.");
+  }
+  if (!resposta.ok || !json?.success) {
+    throw new Error(json?.message ?? "Não foi possível completar a solicitação.");
+  }
+  return json as T;
+}
+
 export type AulaAgenda = {
   id_aula: number;
   titulo: string;
@@ -227,6 +257,15 @@ export type Agenda = {
 // Dados da tela Agenda: aulas de todos os cursos matriculados, em ordem.
 export function buscarAgenda() {
   return apiGet<Agenda>("/aluno/agenda");
+}
+
+// Modal "Solicitar reagendamento". Devolve a mensagem de sucesso da API.
+export async function solicitarReagendamento(idAula: number, motivo: string): Promise<string> {
+  const resposta = await apiPost<{ message: string }>("/aluno/reagendamento/solicitar", {
+    aula_id: idAula,
+    motivo,
+  });
+  return resposta.message;
 }
 
 // Nome do módulo para a tela: se já foi cadastrado como "Módulo 01: ...", usa como está;
