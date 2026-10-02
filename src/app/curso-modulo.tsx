@@ -86,6 +86,11 @@ export default function CursoModuloScreen() {
       <Text style={cursoModuloStyles.progressoResumo}>
         {progresso.aulas_concluidas} de {textoAulas(progresso.total_aulas)}{" "}
         {progresso.total_aulas === 1 ? "concluída" : "concluídas"}
+        {progresso.total_materiais > 0
+          ? ` · ${progresso.materiais_concluidos} de ${progresso.total_materiais} ${
+              progresso.total_materiais === 1 ? "material concluído" : "materiais concluídos"
+            }`
+          : ""}
       </Text>
 
       <Text style={cursoModuloStyles.secaoTitulo}>Aulas</Text>
