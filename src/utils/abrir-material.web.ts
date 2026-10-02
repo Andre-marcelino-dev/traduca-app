@@ -1,8 +1,7 @@
-import { obterToken } from "@/services/api";
+import { sessao } from "@/services/api";
 
 export async function abrirMaterial(url: string, _nomeArquivo: string) {
-  const token = await obterToken();
-  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+  const headers = sessao.token ? { Authorization: `Bearer ${sessao.token}` } : undefined;
 
   const resposta = await fetch(url, { headers });
 

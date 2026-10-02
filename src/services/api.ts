@@ -206,6 +206,29 @@ export function buscarMateriais(idCurso: number) {
   return apiGet<Material[]>(`/aluno/cursos/${idCurso}/materiais`);
 }
 
+export type AulaAgenda = {
+  id_aula: number;
+  titulo: string;
+  curso: string | null;
+  data: string | null;
+  hora: string | null;
+  duracao_minutos: number | null;
+  ao_vivo: boolean;
+  link_aula: string | null;
+  professor: string | null;
+  concluida: boolean;
+};
+
+export type Agenda = {
+  proxima_aula: AulaAgenda | null;
+  aulas: AulaAgenda[];
+};
+
+// Dados da tela Agenda: aulas de todos os cursos matriculados, em ordem.
+export function buscarAgenda() {
+  return apiGet<Agenda>("/aluno/agenda");
+}
+
 // Nome do módulo para a tela: se já foi cadastrado como "Módulo 01: ...", usa como está;
 // senão monta "Módulo Fundamentos 01".
 export function tituloModulo(nome: string, ordem: number): string {
