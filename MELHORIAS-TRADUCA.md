@@ -77,7 +77,7 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
 - **Testes antigos quebrados no site** (achado em 05/10): `php artisan test` para logo no início
   porque `tests/Feature/ChatbotDateTest.php` e `tests/Unit/chatbot/ChatbotDateTest.php` têm a mesma classe.
   Rodando por pasta: 39 erros + 8 falhas que já existiam — testes do chatbot procuram classes
-  `AppServicesChatbot*` que não existem, e testes do painel usam `DATE_FORMAT` (MySQL) no SQLite
+  `App\Services\Chatbot*` que não existem, e testes do painel usam `DATE_FORMAT` (MySQL) no SQLite
   de teste. Não afetam o site no ar, mas escondem problemas novos. Corrigir num PR separado.
 
 - **Guardar o token com criptografia no celular** (`expo-secure-store`). Hoje usa AsyncStorage,
