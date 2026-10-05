@@ -5,6 +5,7 @@ import { ActivityIndicator, Image, Linking, Pressable, Text, View } from "react-
 
 import BandeiraIdioma, { IdiomaId } from "@/components/bandeira-idioma";
 import EstadoVazio from "@/components/estado-vazio";
+import ModalReagendamento from "@/components/modal-reagendamento";
 import TelaComAbas from "@/components/tela-com-abas";
 import { Agenda, AulaAgenda, buscarAgenda } from "@/services/api";
 import agendaStyles from "@/styles/agendaStyles";
@@ -63,6 +64,13 @@ export default function AgendaScreen() {
   const [erro, setErro] = useState("");
   const [erroLink, setErroLink] = useState("");
   const [filtroSelecionado, setFiltroSelecionado] = useState<Filtro>("Hoje");
+  const [aulaParaReagendar, setAulaParaReagendar] = useState<AulaAgenda | null>(null);
+  const [modalReagendamentoVisivel, setModalReagendamentoVisivel] = useState(false);
+
+  function abrirReagendamento(aula: AulaAgenda) {
+    setAulaParaReagendar(aula);
+    setModalReagendamentoVisivel(true);
+  }
 
   useFocusEffect(
     useCallback(() => {
@@ -191,7 +199,10 @@ export default function AgendaScreen() {
                   <Text style={agendaStyles.txtBtnEntrar}>Entrar na aula</Text>
                 </Pressable>
 
-                <Pressable style={agendaStyles.btnReagendar}>
+                <Pressable
+                  style={agendaStyles.btnReagendar}
+                  onPress={() => abrirReagendamento(proxima)}
+                >
                   <Image
                     source={require("@/assets/images/imgIcon/calendario-azul.png")}
                     style={agendaStyles.iconeBtnReagendar}
@@ -350,7 +361,10 @@ export default function AgendaScreen() {
                     <Pressable style={agendaStyles.btnEntrarPequeno} onPress={() => entrarNaAula(aula)}>
                       <Text style={agendaStyles.txtBtnEntrarPequeno}>Entrar</Text>
                     </Pressable>
-                    <Pressable style={agendaStyles.btnReagendarPequeno}>
+                    <Pressable
+                      style={agendaStyles.btnReagendarPequeno}
+                      onPress={() => abrirReagendamento(aula)}
+                    >
                       <Text style={agendaStyles.txtBtnReagendarPequeno}>Reagendar</Text>
                     </Pressable>
                   </View>
@@ -360,6 +374,13 @@ export default function AgendaScreen() {
           })}
         </>
       )}
+
+      <ModalReagendamento
+        visible={modalReagendamentoVisivel}
+        aulas={aulas}
+        aulaInicial={aulaParaReagendar}
+        onClose={() => setModalReagendamentoVisivel(false)}
+      />
     </TelaComAbas>
   );
 }
