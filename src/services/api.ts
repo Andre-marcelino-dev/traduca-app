@@ -268,6 +268,74 @@ export async function solicitarReagendamento(idAula: number, motivo: string): Pr
   return resposta.message;
 }
 
+export type StatusAtividade = "pendente" | "enviada" | "corrigida";
+
+export type AtividadeResumo = {
+  id_atividade: number;
+  titulo: string;
+  descricao: string | null;
+  categoria: { codigo: string; label: string; cor: string } | null;
+  finalidade: string | null;
+  id_curso: number;
+  curso: string | null;
+  professor: string | null;
+  data_entrega: string | null;
+  tem_audio: boolean;
+  url_audio: string | null;
+  extensao_audio: string | null;
+  total_questoes: number;
+  status: StatusAtividade;
+  concluida: boolean;
+  nota: number | null;
+};
+
+export type ListaAtividades = {
+  total: number;
+  concluidas: number;
+  pendentes: number;
+  atividades: AtividadeResumo[];
+};
+
+export type QuestaoAtividade = {
+  id_questao: number;
+  numero: number;
+  enunciado: string;
+  tipo: "multipla_escolha" | "texto";
+  opcoes: { letra: string; texto: string }[];
+  resposta_aluno: string | null;
+  correta: boolean | null;
+};
+
+export type AtividadeDetalhe = AtividadeResumo & {
+  feedback_professor: string | null;
+  data_envio: string | null;
+  pode_responder: boolean;
+  questoes: QuestaoAtividade[];
+};
+
+// Tela Atividades: atividades de todos os cursos matriculados + resumo.
+export function buscarAtividades() {
+  return apiGet<ListaAtividades>("/aluno/atividades");
+}
+
+// Abrir uma atividade (questões, resposta do aluno e correção).
+export function buscarAtividade(id: string | number) {
+  return apiGet<AtividadeDetalhe>(`/aluno/atividades/${id}`);
+}
+
+// Envia as respostas ({ id_questao: "B" | "texto" }). Devolve a mensagem de sucesso.
+export async function responderAtividade(id: number, respostas: Record<number, string>) {
+  const resposta = await apiPost<{ message: string }>(`/aluno/atividades/${id}/responder`, { respostas });
+  return resposta.message;
+}
+
+// "2026-07-30" → "30/07/2026".
+export function formatarData(data: string | null): string {
+  if (!data) return "";
+  const [ano, mes, dia] = data.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
 // Nome do módulo para a tela: se já foi cadastrado como "Módulo 01: ...", usa como está;
 // senão monta "Módulo Fundamentos 01".
 export function tituloModulo(nome: string, ordem: number): string {

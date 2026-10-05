@@ -38,7 +38,11 @@ export default function TabBarInferior() {
   return (
     <View style={tabBarStyles.container}>
       {abas.map((aba) => {
-        const ativa = pathname === aba.rota || pathname.startsWith(`${aba.rota}-`);
+        const ativa =
+          pathname === aba.rota ||
+          pathname.startsWith(`${aba.rota}-`) ||
+          // Tela de uma atividade (/atividade) fica dentro da aba Atividades.
+          (aba.rota === "/atividades" && pathname === "/atividade");
 
         return (
           <Pressable
