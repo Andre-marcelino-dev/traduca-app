@@ -1,6 +1,6 @@
 # Melhorias recomendadas — Traduca (app + site)
 
-Atualizado em 30/09/2026. Ordem = prioridade (o que está no topo é mais importante).
+Atualizado em 05/10/2026. Ordem = prioridade (o que está no topo é mais importante).
 
 ## Avaliação geral
 
@@ -51,11 +51,11 @@ copiando a regra dos controllers de `app/Http/Controllers/aluno/` (backend).
 
 | # | Tela do app | Rota nova na API (sugestão) | De onde copiar a regra no site | Dificuldade |
 |---|---|---|---|---|
-| 1 | **Agenda** | `GET /aluno/agenda` (aulas com data/hora) | `aluno/AulaController@index` | fácil |
+| 1 | ✅ **Agenda** + reagendamento (feito) | `GET /aluno/agenda` (aulas com data/hora) | `aluno/AulaController@index` | fácil |
 | 2 | **Perfil** (salvar e-mail, trocar foto) | `PUT /aluno/perfil/email`, `POST /aluno/perfil/foto` | `aluno/AuthController@atualizarEmail`, `@atualizarFoto` | fácil/média (foto = upload) |
 | 3 | **Alterar senha** (modal da Config) | `PUT /aluno/perfil/senha` | `aluno/AuthController@atualizarSenha` | fácil |
 | 4 | **Desempenho** | `GET /aluno/desempenho` | `aluno/ProgressoController@index` | média |
-| 5 | **Atividades** | `GET /aluno/atividades`, `GET /aluno/atividades/{id}`, `POST .../responder` | `aluno/AtividadeController@index/show/responder` | média |
+| 5 | ✅ **Atividades** (feito 05/10 — falta subir pelo FileZilla: pasta `traduca_atualizacao_atividades`) | `GET /aluno/atividades`, `GET /aluno/atividades/{id}`, `POST .../responder` | `aluno/AtividadeController@index/show/responder` | média |
 | 6 | **Dúvida** | `GET /aluno/duvidas`, `POST /aluno/duvidas` | `aluno/DuvidaController@index/store` | fácil |
 | 7 | **Assistente** (chat) | `GET /aluno/chatbot/dados`, `POST /aluno/chatbot/mensagem` | `aluno/ChatbotController@dados/mensagem` | média (já tem limite de uso) |
 | 8 | **Esqueci / Redefinir senha** | `POST /aluno/senha/esqueci`, `POST /aluno/senha/redefinir` | **não existe no site** — criar do zero (envia e-mail com código/link) | trabalhosa (precisa e-mail configurado na Locaweb) |
@@ -73,6 +73,12 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
 - Nenhuma dessas rotas deve precisar de migration, exceto Esqueci senha e Notificações.
 
 ## 3. Melhorias de segurança e qualidade
+
+- **Testes antigos quebrados no site** (achado em 05/10): `php artisan test` para logo no início
+  porque `tests/Feature/ChatbotDateTest.php` e `tests/Unit/chatbot/ChatbotDateTest.php` têm a mesma classe.
+  Rodando por pasta: 39 erros + 8 falhas que já existiam — testes do chatbot procuram classes
+  `AppServicesChatbot*` que não existem, e testes do painel usam `DATE_FORMAT` (MySQL) no SQLite
+  de teste. Não afetam o site no ar, mas escondem problemas novos. Corrigir num PR separado.
 
 - **Guardar o token com criptografia no celular** (`expo-secure-store`). Hoje usa AsyncStorage,
   que é aceitável para testes, mas no celular o SecureStore é o recomendado. No navegador continua como está.
