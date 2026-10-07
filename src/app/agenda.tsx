@@ -3,23 +3,13 @@ import { useCallback, useState } from "react";
 
 import { ActivityIndicator, Image, Linking, Pressable, Text, View } from "react-native";
 
-import BandeiraIdioma, { IdiomaId } from "@/components/bandeira-idioma";
+import BandeiraIdioma, { idiomaDoCurso } from "@/components/bandeira-idioma";
 import EstadoVazio from "@/components/estado-vazio";
 import ModalReagendamento from "@/components/modal-reagendamento";
 import TelaComAbas from "@/components/tela-com-abas";
 import { Agenda, AulaAgenda, buscarAgenda } from "@/services/api";
 import agendaStyles from "@/styles/agendaStyles";
 import { cores } from "@/styles/variaveis";
-
-// "Inglês" → "ingles"; idioma sem bandeira cadastrada → null.
-function idiomaDoCurso(nomeCurso: string | null): IdiomaId | null {
-  if (!nomeCurso) return null;
-  const nome = nomeCurso.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  if (nome.includes("ingles")) return "ingles";
-  if (nome.includes("portugues")) return "portugues";
-  if (nome.includes("italiano")) return "italiano";
-  return null;
-}
 
 const diasAbrev = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
 const diasSemanaCompleto = [

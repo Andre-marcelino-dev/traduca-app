@@ -1,22 +1,95 @@
-import { router } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
 
-import BandeiraIdioma from "@/components/bandeira-idioma";
+import BandeiraIdioma, { idiomaDoCurso } from "@/components/bandeira-idioma";
+import EstadoVazio from "@/components/estado-vazio";
 import FotoPerfilModal from "@/components/foto-perfil-modal";
 import TelaComAbas from "@/components/tela-com-abas";
+import { alterarEmail, buscarPerfil, fotoAlunoUrl, Perfil } from "@/services/api";
 import perfilStyles from "@/styles/perfilStyles";
-import { fotoAlunoUrl, sessao } from "@/services/api";
+import { cores } from "@/styles/variaveis";
+
+const textoSituacao: Record<string, string> = {
+  "EM CURSO": "Aluno(a) em curso",
+  CONCLUIDO: "Curso concluído",
+};
 
 export default function PerfilScreen() {
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [email, setEmail] = useState("");
+  const [senhaAtual, setSenhaAtual] = useState("");
   const [modalFotoVisivel, setModalFotoVisivel] = useState(false);
+  const [carregando, setCarregando] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+  const [erroSalvar, setErroSalvar] = useState("");
+  const [sucesso, setSucesso] = useState("");
+
+  const carregar = useCallback(async () => {
+    try {
+      const dados = await buscarPerfil();
+      setPerfil(dados);
+      setEmail(dados.email_aluno);
+      setErro("");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível carregar o perfil.");
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      carregar();
+    }, [carregar])
+  );
+
+  const emailMudou = !!perfil && email.trim().toLowerCase() !== perfil.email_aluno.toLowerCase();
+
+  async function salvar() {
+    setErroSalvar("");
+    setSucesso("");
+
+    if (!emailMudou) {
+      setErroSalvar("Nenhuma alteração para salvar.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setErroSalvar("Digite um e-mail válido.");
+      return;
+    }
+    if (!senhaAtual) {
+      setErroSalvar("Para trocar o e-mail, informe sua senha atual.");
+      return;
+    }
+
+    setSalvando(true);
+    try {
+      const mensagem = await alterarEmail(email.trim(), senhaAtual);
+      setSenhaAtual("");
+      await carregar();
+      setSucesso(`${mensagem} Use o novo e-mail no próximo login.`);
+    } catch (e) {
+      setErroSalvar(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   const foto = fotoAlunoUrl();
-  const nome = sessao.aluno?.nome_aluno ?? "";
-  const email = sessao.aluno?.email_aluno ?? "";
 
   return (
     <TelaComAbas titulo="Perfil">
+      {carregando && <ActivityIndicator size="large" color={cores.azul} />}
+
+      {!carregando && erro ? (
+        <EstadoVazio icone={require("@/assets/images/imgIcon/usuario.png")} texto={erro} />
+      ) : null}
+
+      {!carregando && !erro && perfil && (
+      <>
       <View style={perfilStyles.cardPerfil}>
         <View style={perfilStyles.avatarWrapper}>
           <View style={perfilStyles.avatar}>
@@ -41,11 +114,13 @@ export default function PerfilScreen() {
           </Pressable>
         </View>
 
-        <Text style={perfilStyles.nome}>{nome}</Text>
+        <Text style={perfilStyles.nome}>{perfil.nome_aluno}</Text>
 
-        <View style={perfilStyles.statusBadge}>
-          <Text style={perfilStyles.statusBadgeTexto}>Aluno(a) Ativo(a)</Text>
-        </View>
+        {perfil.status_aluno && textoSituacao[perfil.status_aluno] ? (
+          <View style={perfilStyles.statusBadge}>
+            <Text style={perfilStyles.statusBadgeTexto}>{textoSituacao[perfil.status_aluno]}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={perfilStyles.secao}>
@@ -53,33 +128,25 @@ export default function PerfilScreen() {
 
         <View style={perfilStyles.campo}>
           <Text style={perfilStyles.rotulo}>Nome completo</Text>
-          <View style={perfilStyles.inputComIcone}>
+          <View style={[perfilStyles.inputComIcone, perfilStyles.inputSomenteLeitura]}>
             <Image
               source={require("@/assets/images/imgIcon/usuario.png")}
               style={perfilStyles.campoIcone}
             />
-            <TextInput
-              style={perfilStyles.campoTextInput}
-              defaultValue={nome}
-              placeholderTextColor="#888888"
-            />
+            <Text style={perfilStyles.campoTextInput}>{perfil.nome_aluno}</Text>
           </View>
         </View>
 
         <View style={perfilStyles.campo}>
           <Text style={perfilStyles.rotulo}>Telefone</Text>
-          <View style={perfilStyles.inputComIcone}>
+          <View style={[perfilStyles.inputComIcone, perfilStyles.inputSomenteLeitura]}>
             <Image
               source={require("@/assets/images/imgIcon/telefone.png")}
               style={perfilStyles.campoIcone}
             />
-            <TextInput
-              style={perfilStyles.campoTextInput}
-              defaultValue="(11) 98888-7777"
-              keyboardType="phone-pad"
-              placeholderTextColor="#888888"
-            />
+            <Text style={perfilStyles.campoTextInput}>{perfil.telefone_aluno || "Não informado"}</Text>
           </View>
+          <Text style={perfilStyles.ajuda}>Para alterar nome ou telefone, fale com a escola.</Text>
         </View>
 
         <View style={perfilStyles.campo}>
@@ -91,53 +158,103 @@ export default function PerfilScreen() {
             />
             <TextInput
               style={perfilStyles.campoTextInput}
-              defaultValue={email}
+              value={email}
+              onChangeText={(texto) => {
+                setEmail(texto);
+                setErroSalvar("");
+                setSucesso("");
+              }}
               keyboardType="email-address"
               autoCapitalize="none"
               placeholderTextColor="#888888"
             />
           </View>
         </View>
+
+        {/* Só aparece quando o e-mail foi alterado: trocar o e-mail (login) pede a senha */}
+        {emailMudou && (
+          <View style={perfilStyles.campo}>
+            <Text style={perfilStyles.rotulo}>Senha atual (para confirmar o novo e-mail)</Text>
+            <View style={perfilStyles.inputComIcone}>
+              <Image
+                source={require("@/assets/images/imgIcon/senha-azul.png")}
+                style={perfilStyles.campoIcone}
+              />
+              <TextInput
+                style={perfilStyles.campoTextInput}
+                value={senhaAtual}
+                onChangeText={setSenhaAtual}
+                secureTextEntry
+                autoCapitalize="none"
+                placeholderTextColor="#888888"
+              />
+            </View>
+          </View>
+        )}
       </View>
 
       <View style={perfilStyles.secao}>
         <Text style={perfilStyles.secaoTitulo}>Informações do curso</Text>
 
-        <View style={perfilStyles.campo}>
-          <Text style={perfilStyles.rotulo}>Idioma</Text>
-          <View style={perfilStyles.inputComIcone}>
-            <View style={{ marginRight: 10 }}>
-              <BandeiraIdioma idioma="ingles" tamanho={22} />
-            </View>
-            <Text style={perfilStyles.campoValorTexto}>Inglês</Text>
-          </View>
-        </View>
+        {perfil.cursos.length === 0 && (
+          <Text style={perfilStyles.ajuda}>Nenhuma matrícula ativa no momento.</Text>
+        )}
 
-        <View style={perfilStyles.campo}>
-          <Text style={perfilStyles.rotulo}>Nível</Text>
-          <View style={perfilStyles.inputComIcone}>
-            <Image
-              source={require("@/assets/images/imgIcon/trofeu-azul.png")}
-              style={perfilStyles.campoIcone}
-            />
-            <Text style={perfilStyles.campoValorTexto}>Básico II</Text>
-          </View>
-        </View>
+        {perfil.cursos.map((curso) => {
+          const idioma = idiomaDoCurso(curso.nome_curso);
+          return (
+            <View key={curso.id_curso} style={{ flexDirection: "row", gap: 10 }}>
+              <View style={[perfilStyles.campo, { flex: 1 }]}>
+                <Text style={perfilStyles.rotulo}>Idioma</Text>
+                <View style={perfilStyles.inputComIcone}>
+                  {idioma && (
+                    <View style={{ marginRight: 10 }}>
+                      <BandeiraIdioma idioma={idioma} tamanho={22} />
+                    </View>
+                  )}
+                  <Text style={perfilStyles.campoValorTexto}>{curso.nome_curso}</Text>
+                </View>
+              </View>
+
+              <View style={[perfilStyles.campo, { flex: 1 }]}>
+                <Text style={perfilStyles.rotulo}>Nível</Text>
+                <View style={perfilStyles.inputComIcone}>
+                  <Image
+                    source={require("@/assets/images/imgIcon/trofeu-azul.png")}
+                    style={perfilStyles.campoIcone}
+                  />
+                  <Text style={perfilStyles.campoValorTexto}>{curso.nome_nivel ?? "—"}</Text>
+                </View>
+              </View>
+            </View>
+          );
+        })}
       </View>
+
+      {erroSalvar ? <Text style={perfilStyles.txtErro}>{erroSalvar}</Text> : null}
+      {sucesso ? <Text style={perfilStyles.txtSucesso}>{sucesso}</Text> : null}
 
       <Pressable
         style={({ pressed }) => [
           perfilStyles.btnSalvar,
           pressed && perfilStyles.btnSalvarPressed,
         ]}
-        onPress={() => router.navigate("/home")}
+        onPress={salvar}
+        disabled={salvando}
       >
-        <Text style={perfilStyles.txtSalvar}>Salvar alterações</Text>
+        {salvando ? (
+          <ActivityIndicator color={cores.branco} />
+        ) : (
+          <Text style={perfilStyles.txtSalvar}>Salvar alterações</Text>
+        )}
       </Pressable>
+      </>
+      )}
 
       <FotoPerfilModal
         visible={modalFotoVisivel}
         onClose={() => setModalFotoVisivel(false)}
+        onFotoAtualizada={carregar}
       />
     </TelaComAbas>
   );

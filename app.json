@@ -34,7 +34,14 @@
         }
       ],
       "expo-sharing",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O Traduca usa suas fotos para você escolher a foto do seu perfil.",
+          "cameraPermission": "O Traduca usa a câmera para você tirar a foto do seu perfil."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
