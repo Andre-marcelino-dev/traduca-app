@@ -4,9 +4,11 @@ import { useCallback, useState } from "react";
 import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
 
 import EstadoVazio from "@/components/estado-vazio";
+import SeletorCurso from "@/components/seletor-curso";
 import TelaComAbas from "@/components/tela-com-abas";
-import { buscarCursos, buscarMateriais, Material } from "@/services/api";
+import { buscarCursos, buscarMateriais, Curso, Material } from "@/services/api";
 import { abrirMaterial } from "@/services/arquivos";
+import { cursoDaLista, escolherCurso, lerCursoEscolhido } from "@/services/curso-escolhido";
 import cursoStyles from "@/styles/cursoStyles";
 import materiaisStyles from "@/styles/materiaisStyles";
 import { cores } from "@/styles/variaveis";
@@ -54,31 +56,47 @@ export default function MateriaisScreen() {
   const [mostrarModulos, setMostrarModulos] = useState(false);
   const [mostrarBusca, setMostrarBusca] = useState(false);
   const [busca, setBusca] = useState("");
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [idCurso, setIdCurso] = useState<number | undefined>(undefined);
+
+  const carregar = useCallback(async () => {
+    try {
+      const lista = await buscarCursos();
+      setCursos(lista);
+      if (lista.length === 0) {
+        setMateriais([]);
+        setErro("Você ainda não está matriculado em nenhum curso.");
+        return;
+      }
+      // Materiais do idioma que o aluno escolheu (mesmo curso da tela Curso).
+      const atual = cursoDaLista(lista, await lerCursoEscolhido())!;
+      setIdCurso(atual.id_curso);
+      setMateriais(await buscarMateriais(atual.id_curso));
+      setErro("");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível carregar os materiais.");
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
 
   // Busca os dados toda vez que a tela aparece (inclusive ao voltar para ela),
   // para mostrar materiais novos que o professor cadastrou.
   useFocusEffect(
     useCallback(() => {
-      async function carregar() {
-        try {
-          const cursos = await buscarCursos();
-          if (cursos.length === 0) {
-            setMateriais([]);
-            setErro("Você ainda não está matriculado em nenhum curso.");
-            return;
-          }
-          // Mostra os materiais do primeiro curso ativo (mesmo curso da tela Curso).
-          setMateriais(await buscarMateriais(cursos[0].id_curso));
-          setErro("");
-        } catch (e) {
-          setErro(e instanceof Error ? e.message : "Não foi possível carregar os materiais.");
-        } finally {
-          setCarregando(false);
-        }
-      }
       carregar();
-    }, [])
+    }, [carregar])
   );
+
+  async function trocarCurso(id: number) {
+    if (id === idCurso) return;
+    setIdCurso(id);
+    setModuloSelecionado(null); // os módulos são de outro curso
+    setMostrarModulos(false);
+    setCarregando(true);
+    await escolherCurso(id);
+    await carregar();
+  }
 
   // Lista de módulos que têm materiais, em ordem.
   const modulos = materiais
@@ -127,6 +145,8 @@ export default function MateriaisScreen() {
           </Text>
         </View>
       </View>
+
+      <SeletorCurso cursos={cursos} idSelecionado={idCurso} onEscolher={trocarCurso} />
 
       {carregando && <ActivityIndicator size="large" color={cores.azul} />}
 

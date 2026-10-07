@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
 import { apagarToken, guardarToken, lerToken } from "@/services/cofre";
+import { esquecerCursoEscolhido } from "@/services/curso-escolhido";
 
 export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
 
@@ -35,6 +36,7 @@ async function limparSessao() {
   sessao.token = null;
   sessao.aluno = null;
   await apagarToken();
+  await esquecerCursoEscolhido();
   try {
     await AsyncStorage.removeItem(CHAVE_SESSAO);
   } catch {}

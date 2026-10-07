@@ -15,6 +15,7 @@ import {
   formatarData,
   StatusAtividade,
 } from "@/services/api";
+import { cursoDaLista, escolherCurso, lerCursoEscolhido } from "@/services/curso-escolhido";
 import atividadesStyles from "@/styles/atividadesStyles";
 import { cores } from "@/styles/variaveis";
 
@@ -52,8 +53,13 @@ export default function AtividadesScreen() {
     useCallback(() => {
       async function carregar() {
         try {
-          const [listaCursos, dados] = await Promise.all([buscarCursos(), buscarAtividades()]);
+          const [listaCursos, dados, escolhido] = await Promise.all([
+            buscarCursos(),
+            buscarAtividades(),
+            lerCursoEscolhido(),
+          ]);
           setCursos(listaCursos);
+          setIdCurso(escolhido); // idioma escolhido em qualquer tela
           setAtividades(dados.atividades);
           setErro(listaCursos.length === 0 ? "Você ainda não está matriculado em nenhum curso." : "");
         } catch (e) {
@@ -67,7 +73,7 @@ export default function AtividadesScreen() {
   );
 
   // Idioma escolhido (ou o primeiro curso do aluno).
-  const cursoAtual = cursos.find((c) => c.id_curso === idCurso) ?? cursos[0];
+  const cursoAtual = cursoDaLista(cursos, idCurso);
   const doCurso = atividades.filter((a) => a.id_curso === cursoAtual?.id_curso);
   const concluidas = doCurso.filter((a) => a.concluida).length;
   const percentual = doCurso.length > 0 ? Math.round((concluidas / doCurso.length) * 100) : 0;
@@ -104,7 +110,10 @@ export default function AtividadesScreen() {
                 atividadesStyles.idiomaPill,
                 selecionado && atividadesStyles.idiomaPillSelecionado,
               ]}
-              onPress={() => setIdCurso(curso.id_curso)}
+              onPress={() => {
+                setIdCurso(curso.id_curso);
+                escolherCurso(curso.id_curso); // vale também para Aulas, Curso e Materiais
+              }}
             >
               <Text
                 style={[
