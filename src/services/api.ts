@@ -2,9 +2,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
+import { apagarToken, guardarToken, lerToken } from "@/services/cofre";
+
 export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
 
-// Chave onde o login fica salvo no aparelho (vale 30 dias, igual ao token).
+// Chave onde os dados do aluno (nome, e-mail, foto) ficam salvos no aparelho.
+// O token NÃO fica aqui: no celular ele vai para o cofre (ver cofre.ts).
 const CHAVE_SESSAO = "traduca_sessao";
 
 export type Aluno = {
@@ -22,14 +25,16 @@ export const sessao: { token: string | null; aluno: Aluno | null } = {
 };
 
 async function salvarSessao() {
+  if (sessao.token) await guardarToken(sessao.token);
   try {
-    await AsyncStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+    await AsyncStorage.setItem(CHAVE_SESSAO, JSON.stringify({ aluno: sessao.aluno }));
   } catch {}
 }
 
 async function limparSessao() {
   sessao.token = null;
   sessao.aluno = null;
+  await apagarToken();
   try {
     await AsyncStorage.removeItem(CHAVE_SESSAO);
   } catch {}
@@ -37,10 +42,19 @@ async function limparSessao() {
 
 // Chamado ao abrir o app: recupera o login salvo e atualiza os dados do aluno.
 export async function carregarSessao() {
+  let salvo: { token?: string | null; aluno?: Aluno | null } = {};
   try {
-    const salvo = await AsyncStorage.getItem(CHAVE_SESSAO);
-    if (salvo) Object.assign(sessao, JSON.parse(salvo));
+    salvo = JSON.parse((await AsyncStorage.getItem(CHAVE_SESSAO)) ?? "{}");
   } catch {}
+
+  sessao.aluno = salvo.aluno ?? null;
+  sessao.token = await lerToken();
+
+  // Versão antiga do app guardava o token junto com os dados: muda para o cofre.
+  if (!sessao.token && salvo.token) {
+    sessao.token = salvo.token;
+    await salvarSessao();
+  }
 
   if (!sessao.token) return;
 
@@ -60,6 +74,14 @@ export async function carregarSessao() {
   } catch {
     // sem internet: segue com os dados salvos
   }
+}
+
+// Mensagem quando o site recusa o token (401): a do site, se ele explicou o
+// motivo (ex.: cadastro inativo); senão, login vencido.
+function mensagemSaida(json: { success?: boolean; message?: string } | null): string {
+  return json?.success === false && json.message
+    ? json.message
+    : "Sua sessão expirou. Faça login novamente.";
 }
 
 // Sair da conta: apaga o token no servidor e o login salvo no aparelho.
@@ -94,7 +116,7 @@ async function apiGet<T>(caminho: string): Promise<T> {
     // Login vencido ou apagado: volta para a tela de login.
     await limparSessao();
     router.replace("/");
-    throw new Error("Sua sessão expirou. Faça login novamente.");
+    throw new Error(mensagemSaida(json));
   }
   if (!resposta.ok || !json?.success) {
     throw new Error(json?.message ?? "Não foi possível carregar os dados.");
@@ -207,17 +229,19 @@ export function buscarMateriais(idCurso: number) {
 }
 
 // Envia dados pra API usando o token do aluno logado.
-async function apiPost<T>(caminho: string, corpo: unknown): Promise<T> {
+// FormData (envio de arquivo, ex.: foto) vai como formulário; o resto como JSON.
+async function apiEnviar<T>(metodo: "POST" | "PUT", caminho: string, corpo: unknown): Promise<T> {
+  const ehFormulario = corpo instanceof FormData;
   let resposta: Response;
   try {
     resposta = await fetch(`${API_URL}${caminho}`, {
-      method: "POST",
+      method: metodo,
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
+        ...(ehFormulario ? {} : { "Content-Type": "application/json" }),
         Authorization: `Bearer ${sessao.token}`,
       },
-      body: JSON.stringify(corpo),
+      body: ehFormulario ? corpo : JSON.stringify(corpo),
     });
   } catch {
     throw new Error("Sem conexão com o servidor. Verifique sua internet.");
@@ -228,12 +252,81 @@ async function apiPost<T>(caminho: string, corpo: unknown): Promise<T> {
   if (resposta.status === 401) {
     await limparSessao();
     router.replace("/");
-    throw new Error("Sua sessão expirou. Faça login novamente.");
+    throw new Error(mensagemSaida(json));
   }
   if (!resposta.ok || !json?.success) {
     throw new Error(json?.message ?? "Não foi possível completar a solicitação.");
   }
   return json as T;
+}
+
+function apiPost<T>(caminho: string, corpo: unknown) {
+  return apiEnviar<T>("POST", caminho, corpo);
+}
+
+function apiPut<T>(caminho: string, corpo: unknown) {
+  return apiEnviar<T>("PUT", caminho, corpo);
+}
+
+export type Perfil = Aluno & {
+  telefone_aluno: string | null;
+  data_nasc_aluno: string | null;
+  status_aluno: string | null;
+  cursos: { id_curso: number; nome_curso: string | null; nome_nivel: string | null }[];
+};
+
+// Tela Perfil: dados do aluno + idioma/nível dos cursos.
+export function buscarPerfil() {
+  return apiGet<Perfil>("/aluno/perfil");
+}
+
+// Atualiza nome/e-mail/foto na sessão (Home, Config e Perfil leem daqui).
+async function atualizarAlunoNaSessao(aluno: Aluno) {
+  sessao.aluno = aluno;
+  await salvarSessao();
+}
+
+// Troca o e-mail (pede a senha atual). Devolve a mensagem de sucesso.
+export async function alterarEmail(email: string, senhaAtual: string): Promise<string> {
+  const resposta = await apiPut<{ message: string; data: Aluno }>("/aluno/perfil/email", {
+    email_aluno: email,
+    senha_atual: senhaAtual,
+  });
+  await atualizarAlunoNaSessao(resposta.data);
+  return resposta.message;
+}
+
+// Modal "Alterar senha". Os outros aparelhos do aluno são desconectados.
+export async function alterarSenha(
+  senhaAtual: string,
+  novaSenha: string,
+  confirmacao: string
+): Promise<string> {
+  const resposta = await apiPut<{ message: string }>("/aluno/perfil/senha", {
+    senha_atual: senhaAtual,
+    nova_senha: novaSenha,
+    nova_senha_confirmation: confirmacao,
+  });
+  return resposta.message;
+}
+
+// Envia a foto escolhida (uri do celular, ou o File no navegador).
+export async function enviarFoto(foto: {
+  uri: string;
+  nome: string;
+  tipo: string;
+  arquivoWeb?: Blob;
+}): Promise<string> {
+  const formulario = new FormData();
+  if (foto.arquivoWeb) {
+    formulario.append("foto_aluno", foto.arquivoWeb, foto.nome);
+  } else {
+    // No celular o React Native aceita { uri, name, type } no lugar do arquivo.
+    formulario.append("foto_aluno", { uri: foto.uri, name: foto.nome, type: foto.tipo } as unknown as Blob);
+  }
+  const resposta = await apiPost<{ message: string; data: Aluno }>("/aluno/perfil/foto", formulario);
+  await atualizarAlunoNaSessao(resposta.data);
+  return resposta.message;
 }
 
 export type AulaAgenda = {

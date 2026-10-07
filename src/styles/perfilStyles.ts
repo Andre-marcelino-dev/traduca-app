@@ -143,6 +143,33 @@ const perfilStyles = StyleSheet.create({
     fontWeight: "bold",
     color: cores.branco,
   },
+
+  // Campo só para leitura (nome e telefone só a escola altera).
+  inputSomenteLeitura: {
+    borderColor: cores.cinza,
+    backgroundColor: `${cores.cinza}55`,
+  },
+
+  ajuda: {
+    fontSize: 11,
+    color: cores.cinzaEscuro,
+    marginTop: 4,
+  },
+
+  txtErro: {
+    fontSize: 13,
+    color: cores.vermelho,
+    textAlign: "center",
+    marginBottom: 12,
+  },
+
+  txtSucesso: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: cores.verde,
+    textAlign: "center",
+    marginBottom: 12,
+  },
 });
 
 export default perfilStyles;

@@ -95,6 +95,21 @@ const alterarSenhaStyle = StyleSheet.create({
     fontWeight: "bold",
     color: cores.branco,
   },
+
+  txtErro: {
+    fontSize: 13,
+    color: cores.vermelho,
+    textAlign: "center",
+    marginTop: 4,
+  },
+
+  txtSucesso: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: cores.verde,
+    textAlign: "center",
+    marginTop: 4,
+  },
 });
 
 export default alterarSenhaStyle;

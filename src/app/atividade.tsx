@@ -24,6 +24,16 @@ const statusInfo: Record<StatusAtividade, { texto: string; cor: string }> = {
 
 const textoNota = (nota: number) => String(nota).replace(".", ",");
 
+// O professor às vezes digita a letra dentro da opção ("(B) November 26th");
+// a letra já aparece no círculo, então tira a repetida: "(B) ", "B) ", "B. ", "B - ".
+function textoDaOpcao(letra: string, texto: string): string {
+  const semLetra = texto.replace(
+    new RegExp(`^\\s*(\\(${letra}\\)|${letra}\\s*[).:\\-–](?=\\s))\\s*`, "i"),
+    ""
+  );
+  return semLetra.trim() ? semLetra : texto;
+}
+
 export default function AtividadeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [dados, setDados] = useState<AtividadeDetalhe | null>(null);
@@ -241,7 +251,9 @@ export default function AtividadeScreen() {
                   >
                     {opcao.letra}
                   </Text>
-                  <Text style={atividadeStyles.opcaoTexto}>{opcao.texto}</Text>
+                  <Text style={atividadeStyles.opcaoTexto}>
+                    {textoDaOpcao(opcao.letra, opcao.texto)}
+                  </Text>
                 </Pressable>
               );
             })

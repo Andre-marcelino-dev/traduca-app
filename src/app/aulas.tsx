@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { ActivityIndicator, Image, Linking, Pressable, Text, View } from "react-native";
 
 import BandeiraDesenho from "@/components/bandeira-desenho";
-import BandeiraIdioma, { IdiomaId } from "@/components/bandeira-idioma";
+import BandeiraIdioma, { idiomaDoCurso } from "@/components/bandeira-idioma";
 import CircularProgress from "@/components/circular-progress";
 import EstadoVazio from "@/components/estado-vazio";
 import TelaComAbas from "@/components/tela-com-abas";
@@ -20,15 +20,6 @@ import {
 } from "@/services/api";
 import aulasStyles from "@/styles/aulasStyles";
 import { cores } from "@/styles/variaveis";
-
-// "Inglês" → "ingles"; idioma sem bandeira cadastrada → null.
-function idiomaDoCurso(nomeCurso: string): IdiomaId | null {
-  const nome = nomeCurso.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  if (nome.includes("ingles")) return "ingles";
-  if (nome.includes("portugues")) return "portugues";
-  if (nome.includes("italiano")) return "italiano";
-  return null;
-}
 
 // "2026-12-12" + "18:00" → "Hoje, 18:00" / "12/12, 18:00".
 function dataDaAula(aula: Aula): string {
