@@ -18,6 +18,7 @@ import {
   ModuloDetalhe,
   primeiroNomeAluno,
 } from "@/services/api";
+import { cursoDaLista, escolherCurso, lerCursoEscolhido } from "@/services/curso-escolhido";
 import aulasStyles from "@/styles/aulasStyles";
 import { cores } from "@/styles/variaveis";
 
@@ -38,8 +39,9 @@ const doisDigitos = (n: number) => String(n).padStart(2, "0");
 
 export default function AulasScreen() {
   const [cursos, setCursos] = useState<Curso[]>([]);
-  // Curso escolhido pelo aluno (null = o primeiro) e o que está sendo mostrado.
-  const [idCurso, setIdCurso] = useState<number | null>(null);
+  // Conta os toques em "Selecione o idioma": cada toque busca os dados de novo.
+  // A escolha em si fica salva em curso-escolhido.ts (vale para todas as telas).
+  const [trocas, setTrocas] = useState(0);
   const [idMostrado, setIdMostrado] = useState<number | null>(null);
   const [curso, setCurso] = useState<CursoModulos | null>(null);
   const [modulo, setModulo] = useState<ModuloDetalhe | null>(null);
@@ -59,7 +61,8 @@ export default function AulasScreen() {
             return;
           }
 
-          const atual = lista.find((c) => c.id_curso === idCurso) ?? lista[0];
+          // Idioma escolhido pelo aluno em qualquer tela (ou o primeiro curso).
+          const atual = cursoDaLista(lista, await lerCursoEscolhido())!;
           setIdMostrado(atual.id_curso);
 
           const dadosCurso = await buscarModulosCurso(atual.id_curso);
@@ -78,7 +81,7 @@ export default function AulasScreen() {
         }
       }
       carregar();
-    }, [idCurso])
+    }, [trocas])
   );
 
   const cursoAtual = cursos.find((c) => c.id_curso === idMostrado);
@@ -287,7 +290,10 @@ export default function AulasScreen() {
                 <Pressable
                   key={c.id_curso}
                   style={[aulasStyles.cardIdioma, selecionado && aulasStyles.cardIdiomaSelecionado]}
-                  onPress={() => setIdCurso(c.id_curso)}
+                  onPress={async () => {
+                    await escolherCurso(c.id_curso);
+                    setTrocas((n) => n + 1); // busca de novo com o idioma escolhido
+                  }}
                 >
                   <View style={aulasStyles.cardIdiomaBandeira}>
                     {id ? (

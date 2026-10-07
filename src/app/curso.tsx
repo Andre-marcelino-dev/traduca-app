@@ -5,16 +5,19 @@ import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 
 import BarraProgresso from "@/components/barra-progresso";
 import EstadoVazio from "@/components/estado-vazio";
+import SeletorCurso from "@/components/seletor-curso";
 import TelaComAbas from "@/components/tela-com-abas";
 import {
   buscarCursos,
   buscarModulosCurso,
+  Curso,
   CursoModulos,
   formatarDuracao,
   ModuloResumo,
   textoAulas,
   tituloModulo,
 } from "@/services/api";
+import { cursoDaLista, escolherCurso, lerCursoEscolhido } from "@/services/curso-escolhido";
 import cursoStyles from "@/styles/cursoStyles";
 import { cores } from "@/styles/variaveis";
 
@@ -33,34 +36,48 @@ function statusDoModulo(modulo: ModuloResumo): StatusModulo {
 }
 
 export default function CursoScreen() {
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [idCurso, setIdCurso] = useState<number | undefined>(undefined);
   const [dados, setDados] = useState<CursoModulos | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+
+  const carregar = useCallback(async () => {
+    try {
+      const lista = await buscarCursos();
+      setCursos(lista);
+      if (lista.length === 0) {
+        setDados(null);
+        setErro("Você ainda não está matriculado em nenhum curso.");
+        return;
+      }
+      // Mostra o idioma que o aluno escolheu (ou o primeiro curso).
+      const atual = cursoDaLista(lista, await lerCursoEscolhido())!;
+      setIdCurso(atual.id_curso);
+      setDados(await buscarModulosCurso(atual.id_curso));
+      setErro("");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível carregar o curso.");
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
 
   // Busca os dados toda vez que a tela aparece (inclusive ao voltar para ela),
   // para mostrar módulos novos e o progresso sempre atualizados.
   useFocusEffect(
     useCallback(() => {
-      async function carregar() {
-        try {
-          const cursos = await buscarCursos();
-          if (cursos.length === 0) {
-            setDados(null);
-            setErro("Você ainda não está matriculado em nenhum curso.");
-            return;
-          }
-          // Mostra o primeiro curso ativo do aluno.
-          setDados(await buscarModulosCurso(cursos[0].id_curso));
-          setErro("");
-        } catch (e) {
-          setErro(e instanceof Error ? e.message : "Não foi possível carregar o curso.");
-        } finally {
-          setCarregando(false);
-        }
-      }
       carregar();
-    }, [])
+    }, [carregar])
   );
+
+  async function trocarCurso(id: number) {
+    if (id === idCurso) return;
+    setIdCurso(id);
+    setCarregando(true);
+    await escolherCurso(id);
+    await carregar();
+  }
 
   const modulos = (dados?.modulos ?? []).map((modulo) => ({
     id: modulo.id_modulo,
@@ -83,6 +100,8 @@ export default function CursoScreen() {
           <Text style={cursoStyles.abaItemTexto}>Materiais</Text>
         </Pressable>
       </View>
+
+      <SeletorCurso cursos={cursos} idSelecionado={idCurso} onEscolher={trocarCurso} />
 
       {carregando && <ActivityIndicator size="large" color={cores.azul} />}
 
