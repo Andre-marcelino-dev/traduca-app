@@ -2,9 +2,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 
+import { apagarToken, guardarToken, lerToken } from "@/services/cofre";
+
 export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
 
-// Chave onde o login fica salvo no aparelho (vale 30 dias, igual ao token).
+// Chave onde os dados do aluno (nome, e-mail, foto) ficam salvos no aparelho.
+// O token NÃO fica aqui: no celular ele vai para o cofre (ver cofre.ts).
 const CHAVE_SESSAO = "traduca_sessao";
 
 export type Aluno = {
@@ -22,14 +25,16 @@ export const sessao: { token: string | null; aluno: Aluno | null } = {
 };
 
 async function salvarSessao() {
+  if (sessao.token) await guardarToken(sessao.token);
   try {
-    await AsyncStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+    await AsyncStorage.setItem(CHAVE_SESSAO, JSON.stringify({ aluno: sessao.aluno }));
   } catch {}
 }
 
 async function limparSessao() {
   sessao.token = null;
   sessao.aluno = null;
+  await apagarToken();
   try {
     await AsyncStorage.removeItem(CHAVE_SESSAO);
   } catch {}
@@ -37,10 +42,19 @@ async function limparSessao() {
 
 // Chamado ao abrir o app: recupera o login salvo e atualiza os dados do aluno.
 export async function carregarSessao() {
+  let salvo: { token?: string | null; aluno?: Aluno | null } = {};
   try {
-    const salvo = await AsyncStorage.getItem(CHAVE_SESSAO);
-    if (salvo) Object.assign(sessao, JSON.parse(salvo));
+    salvo = JSON.parse((await AsyncStorage.getItem(CHAVE_SESSAO)) ?? "{}");
   } catch {}
+
+  sessao.aluno = salvo.aluno ?? null;
+  sessao.token = await lerToken();
+
+  // Versão antiga do app guardava o token junto com os dados: muda para o cofre.
+  if (!sessao.token && salvo.token) {
+    sessao.token = salvo.token;
+    await salvarSessao();
+  }
 
   if (!sessao.token) return;
 
@@ -60,6 +74,14 @@ export async function carregarSessao() {
   } catch {
     // sem internet: segue com os dados salvos
   }
+}
+
+// Mensagem quando o site recusa o token (401): a do site, se ele explicou o
+// motivo (ex.: cadastro inativo); senão, login vencido.
+function mensagemSaida(json: { success?: boolean; message?: string } | null): string {
+  return json?.success === false && json.message
+    ? json.message
+    : "Sua sessão expirou. Faça login novamente.";
 }
 
 // Sair da conta: apaga o token no servidor e o login salvo no aparelho.
@@ -94,7 +116,7 @@ async function apiGet<T>(caminho: string): Promise<T> {
     // Login vencido ou apagado: volta para a tela de login.
     await limparSessao();
     router.replace("/");
-    throw new Error("Sua sessão expirou. Faça login novamente.");
+    throw new Error(mensagemSaida(json));
   }
   if (!resposta.ok || !json?.success) {
     throw new Error(json?.message ?? "Não foi possível carregar os dados.");
@@ -228,7 +250,7 @@ async function apiPost<T>(caminho: string, corpo: unknown): Promise<T> {
   if (resposta.status === 401) {
     await limparSessao();
     router.replace("/");
-    throw new Error("Sua sessão expirou. Faça login novamente.");
+    throw new Error(mensagemSaida(json));
   }
   if (!resposta.ok || !json?.success) {
     throw new Error(json?.message ?? "Não foi possível completar a solicitação.");

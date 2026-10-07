@@ -1,6 +1,6 @@
 # Melhorias recomendadas — Traduca (app + site)
 
-Atualizado em 05/10/2026. Ordem = prioridade (o que está no topo é mais importante).
+Atualizado em 07/10/2026. Ordem = prioridade (o que está no topo é mais importante).
 
 ## Avaliação geral
 
@@ -80,8 +80,14 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
   `App\Services\Chatbot*` que não existem, e testes do painel usam `DATE_FORMAT` (MySQL) no SQLite
   de teste. Não afetam o site no ar, mas escondem problemas novos. Corrigir num PR separado.
 
-- **Guardar o token com criptografia no celular** (`expo-secure-store`). Hoje usa AsyncStorage,
-  que é aceitável para testes, mas no celular o SecureStore é o recomendado. No navegador continua como está.
+- ✅ **Segurança do login** (07/10):
+  - App: no celular o token fica no cofre do aparelho (`expo-secure-store`, `src/services/cofre.ts`);
+    no navegador continua no armazenamento do navegador. Quem já estava logado não precisa entrar de novo.
+  - Site: aluno **INATIVO** não entra no site nem no app; se for desativado logado, sai na hora
+    (tokens apagados). Login do app apaga as chaves vencidas. Pacote: `traduca_atualizacao_seguranca_login`.
+- **Arquivo `src/public/traducaidiomas/alunos.zip` no projeto do site** (achado em 07/10, 5 MB, criado em 06/10):
+  não é do Git e **não pode ir para o GitHub** (repositório público; pode ter fotos de alunos).
+  Cuidado com `git add -A` no site; se ele não for mais necessário, apagar ou colocar no `.gitignore`.
 - **Endereço da API configurável** (`EXPO_PUBLIC_API_URL`). Assim dá para testar com o banco local
   (`localhost:8081`) sem mexer no código — evita a confusão "cadastrei no local e não aparece no app".
 - **Aluno com mais de um curso:** a tela Aulas já deixa escolher o idioma; Curso e Materiais
