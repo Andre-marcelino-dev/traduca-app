@@ -424,6 +424,44 @@ export async function responderAtividade(id: number, respostas: Record<number, s
   return resposta.message;
 }
 
+export type Desempenho = {
+  curso: string | null;
+  nivel: string | null;
+  presenca: {
+    total_aulas: number;
+    presentes: number;
+    faltas: number;
+    justificadas: number;
+    percentual: number;
+  };
+  materiais: {
+    total: number;
+    vistos: number;
+    percentual: number;
+  };
+  minutos_estudados: number;
+  ultimas_presencas: {
+    id_presenca: number;
+    data: string | null;
+    aula_titulo: string | null;
+    status: "presente" | "falta" | "justificado";
+    justificativa: { status: "pendente" | "aceita" | "recusada"; resposta_professor: string | null } | null;
+  }[];
+};
+
+// Tela Desempenho: presença, materiais vistos e minutos estudados do curso.
+export function buscarDesempenho(idCurso: number) {
+  return apiGet<Desempenho>(`/aluno/cursos/${idCurso}/desempenho`);
+}
+
+// Aluno justifica uma falta. Devolve a mensagem de sucesso da API.
+export async function justificarFalta(idPresenca: number, motivo: string): Promise<string> {
+  const resposta = await apiPost<{ message: string }>(`/aluno/presencas/${idPresenca}/justificar`, {
+    motivo_justificativa: motivo,
+  });
+  return resposta.message;
+}
+
 // "2026-07-30" → "30/07/2026".
 export function formatarData(data: string | null): string {
   if (!data) return "";
