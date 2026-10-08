@@ -89,6 +89,90 @@ const duvidaStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
+  secaoTitulo: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: cores.preto,
+    marginTop: 24,
+    marginBottom: 12,
+  },
+
+  duvidaCard: {
+    borderWidth: 1,
+    borderColor: cores.cinza,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 12,
+  },
+
+  duvidaTopo: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+  },
+
+  duvidaAssunto: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "bold",
+    color: cores.preto,
+    marginRight: 8,
+  },
+
+  duvidaStatusBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+
+  duvidaStatusTexto: {
+    fontSize: 11,
+    fontWeight: "bold",
+  },
+
+  duvidaMensagem: {
+    fontSize: 13,
+    color: cores.cinzaEscuro,
+    marginTop: 6,
+  },
+
+  duvidaData: {
+    fontSize: 11,
+    color: cores.cinzaEscuro,
+    marginTop: 8,
+  },
+
+  duvidaRespostaBox: {
+    borderTopWidth: 1,
+    borderTopColor: cores.cinza,
+    marginTop: 10,
+    paddingTop: 10,
+  },
+
+  duvidaRespostaRotulo: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: cores.azul,
+    marginBottom: 4,
+  },
+
+  duvidaRespostaTexto: {
+    fontSize: 13,
+    color: cores.preto,
+  },
+
+  vazioTexto: {
+    fontSize: 13,
+    color: cores.cinzaEscuro,
+    marginBottom: 12,
+  },
+
+  erroTexto: {
+    fontSize: 13,
+    color: cores.vermelho,
+    marginBottom: 12,
+  },
 });
 
 export default duvidaStyles;
