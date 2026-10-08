@@ -221,6 +221,7 @@ export type Material = {
   ordem_modulo: number;
   tem_arquivo: boolean;
   extensao: string | null;
+  tamanho_bytes: number | null;
   concluido: boolean;
   url_download: string;
 };
@@ -228,6 +229,14 @@ export type Material = {
 // Materiais de apoio do curso (todos os módulos liberados).
 export function buscarMateriais(idCurso: number) {
   return apiGet<Material[]>(`/aluno/cursos/${idCurso}/materiais`);
+}
+
+// 2400000 → "2,4 MB"; 8000 → "8 KB"; null → "".
+export function formatarTamanho(bytes: number | null): string {
+  if (bytes === null) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
 }
 
 // Envia dados pra API usando o token do aluno logado.
@@ -422,6 +431,30 @@ export function buscarAtividade(id: string | number) {
 export async function responderAtividade(id: number, respostas: Record<number, string>) {
   const resposta = await apiPost<{ message: string }>(`/aluno/atividades/${id}/responder`, { respostas });
   return resposta.message;
+}
+
+export type Duvida = {
+  id_duvida: number;
+  assunto: string;
+  mensagem: string;
+  resposta_professor: string | null;
+  status: "pendente" | "respondida";
+  criado_em: string | null;
+  respondido_em: string | null;
+};
+
+// Tela Dúvida: lista as dúvidas que o aluno já enviou.
+export function buscarDuvidas() {
+  return apiGet<Duvida[]>("/aluno/duvidas");
+}
+
+// Envia uma nova dúvida ao professor. Devolve a dúvida criada.
+export async function enviarDuvida(assunto: string, mensagem: string): Promise<Duvida> {
+  const resposta = await apiPost<{ message: string; data: Duvida }>("/aluno/duvidas", {
+    assunto_duvida: assunto,
+    mensagem_duvida: mensagem,
+  });
+  return resposta.data;
 }
 
 export type Desempenho = {

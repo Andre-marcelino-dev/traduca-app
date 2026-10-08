@@ -6,7 +6,7 @@ import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "reac
 import EstadoVazio from "@/components/estado-vazio";
 import SeletorCurso from "@/components/seletor-curso";
 import TelaComAbas from "@/components/tela-com-abas";
-import { buscarCursos, buscarMateriais, Curso, Material } from "@/services/api";
+import { buscarCursos, buscarMateriais, Curso, formatarTamanho, Material } from "@/services/api";
 import { abrirMaterial } from "@/services/arquivos";
 import { cursoDaLista, escolherCurso, lerCursoEscolhido } from "@/services/curso-escolhido";
 import cursoStyles from "@/styles/cursoStyles";
@@ -282,6 +282,7 @@ export default function MateriaisScreen() {
               ) : null}
               <Text style={materiaisStyles.materialTamanho}>
                 {material.extensao ? material.extensao.toUpperCase() : "Sem arquivo"}
+                {material.tamanho_bytes !== null ? ` · ${formatarTamanho(material.tamanho_bytes)}` : ""}
                 {material.concluido ? (
                   <Text style={materiaisStyles.materialConcluido}> · Concluído</Text>
                 ) : null}

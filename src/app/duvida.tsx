@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 
-import { Alert, Linking, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Pressable, Text, TextInput, View } from "react-native";
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
 import TelaComAbas from "@/components/tela-com-abas";
 import { WHATSAPP_PROFESSOR } from "@/constants/contato";
+import { buscarDuvidas, Duvida, enviarDuvida, formatarData } from "@/services/api";
 import duvidaStyles from "@/styles/duvidaStyles";
 import { cores } from "@/styles/variaveis";
 
@@ -44,23 +46,59 @@ function IconeInstagram() {
   );
 }
 
+const statusInfo: Record<Duvida["status"], { texto: string; cor: string }> = {
+  pendente: { texto: "Pendente", cor: cores.laranja },
+  respondida: { texto: "Respondida", cor: cores.verde },
+};
+
+// "2026-10-08T14:00:00-03:00" → "08/10/2026".
+function formatarDataHora(iso: string | null): string {
+  if (!iso) return "";
+  return formatarData(iso.slice(0, 10));
+}
+
 export default function DuvidaScreen() {
   const [assunto, setAssunto] = useState("");
   const [mensagem, setMensagem] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
-  function enviarMensagem() {
-    const texto = `Assunto: ${assunto}\n\n${mensagem}`;
-    const url = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`;
+  const [duvidas, setDuvidas] = useState<Duvida[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
 
-    Linking.openURL(url)
-      .then(() => {
-        setAssunto("");
-        setMensagem("");
-      })
-      .catch((erro) => {
-        console.error("Não foi possível abrir o WhatsApp:", erro);
-        Alert.alert("Não foi possível abrir o WhatsApp", "Verifique se há um navegador ou o WhatsApp instalado.");
-      });
+  useFocusEffect(
+    useCallback(() => {
+      buscarDuvidas()
+        .then((lista) => {
+          setDuvidas(lista);
+          setErro("");
+        })
+        .catch((e) => setErro(e instanceof Error ? e.message : "Não foi possível carregar suas dúvidas."))
+        .finally(() => setCarregando(false));
+    }, [])
+  );
+
+  async function enviarMensagem() {
+    if (!assunto.trim() || !mensagem.trim()) {
+      Alert.alert("Preencha tudo", "Escreva o assunto e a mensagem antes de enviar.");
+      return;
+    }
+
+    setEnviando(true);
+    try {
+      const nova = await enviarDuvida(assunto.trim(), mensagem.trim());
+      setDuvidas((atuais) => [nova, ...atuais]);
+      setAssunto("");
+      setMensagem("");
+      Alert.alert("Dúvida enviada!", "O professor vai responder em breve.");
+    } catch (e) {
+      Alert.alert(
+        "Não foi possível enviar",
+        e instanceof Error ? e.message : "Tente novamente em instantes."
+      );
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
@@ -70,6 +108,7 @@ export default function DuvidaScreen() {
         onChangeText={setAssunto}
         placeholder="Assunto..."
         placeholderTextColor={cores.cinzaEscuro}
+        maxLength={150}
         style={duvidaStyles.inputAssunto}
       />
 
@@ -79,18 +118,63 @@ export default function DuvidaScreen() {
         placeholder="Mensagem..."
         placeholderTextColor={cores.cinzaEscuro}
         multiline
+        maxLength={2000}
         style={duvidaStyles.inputMensagem}
       />
 
       <Pressable
         style={({ pressed }) => [
           duvidaStyles.btnEnviar,
+          enviando && { opacity: 0.6 },
           pressed && duvidaStyles.btnEnviarPressed,
         ]}
         onPress={enviarMensagem}
+        disabled={enviando}
       >
-        <Text style={duvidaStyles.txtEnviar}>Enviar mensagem</Text>
+        {enviando ? (
+          <ActivityIndicator color={cores.branco} />
+        ) : (
+          <Text style={duvidaStyles.txtEnviar}>Enviar mensagem</Text>
+        )}
       </Pressable>
+
+      <Text style={duvidaStyles.secaoTitulo}>Suas dúvidas</Text>
+
+      {carregando && <ActivityIndicator color={cores.azul} />}
+
+      {!carregando && erro ? <Text style={duvidaStyles.erroTexto}>{erro}</Text> : null}
+
+      {!carregando && !erro && duvidas.length === 0 && (
+        <Text style={duvidaStyles.vazioTexto}>Você ainda não enviou nenhuma dúvida.</Text>
+      )}
+
+      {!carregando &&
+        duvidas.map((duvida) => {
+          const status = statusInfo[duvida.status];
+
+          return (
+            <View key={duvida.id_duvida} style={duvidaStyles.duvidaCard}>
+              <View style={duvidaStyles.duvidaTopo}>
+                <Text style={duvidaStyles.duvidaAssunto}>{duvida.assunto}</Text>
+                <View style={[duvidaStyles.duvidaStatusBadge, { backgroundColor: `${status.cor}22` }]}>
+                  <Text style={[duvidaStyles.duvidaStatusTexto, { color: status.cor }]}>
+                    {status.texto}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={duvidaStyles.duvidaMensagem}>{duvida.mensagem}</Text>
+              <Text style={duvidaStyles.duvidaData}>Enviada em {formatarDataHora(duvida.criado_em)}</Text>
+
+              {duvida.resposta_professor ? (
+                <View style={duvidaStyles.duvidaRespostaBox}>
+                  <Text style={duvidaStyles.duvidaRespostaRotulo}>Resposta do professor</Text>
+                  <Text style={duvidaStyles.duvidaRespostaTexto}>{duvida.resposta_professor}</Text>
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
 
       <View style={duvidaStyles.cardContato}>
         <Text style={duvidaStyles.contatoTitulo}>Formas de contato</Text>
