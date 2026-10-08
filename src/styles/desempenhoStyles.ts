@@ -93,28 +93,6 @@ const desempenhoStyles = StyleSheet.create({
     color: cores.cinzaEscuro,
   },
 
-  estrelasLinha: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-
-  estrela: {
-    fontSize: 13,
-    color: cores.laranja,
-  },
-
-  estrelaVazia: {
-    color: cores.cinza,
-  },
-
-  medalhaTexto: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: cores.laranja,
-    marginLeft: 2,
-  },
-
   // Estatísticas
   statsLinha: {
     flexDirection: "row",
@@ -155,79 +133,6 @@ const desempenhoStyles = StyleSheet.create({
   statLegenda: {
     fontSize: 11,
     color: cores.cinzaEscuro,
-    textAlign: "center",
-    marginTop: 2,
-  },
-
-  // Meta semanal
-  cardMetaSemanal: {
-    flexDirection: "row",
-    backgroundColor: `${cores.azul}0D`,
-    borderWidth: 1,
-    borderColor: `${cores.azul}30`,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 24,
-  },
-
-  metaSemanalColuna: {
-    flex: 1,
-  },
-
-  metaSemanalTitulo: {
-    fontSize: 15,
-    fontWeight: "bold",
-    color: cores.preto,
-    marginBottom: 12,
-  },
-
-  metaChecklistItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-
-  metaCheckIcone: {
-    width: 14,
-    height: 14,
-    tintColor: cores.verde,
-    marginRight: 8,
-  },
-
-  metaChecklistTexto: {
-    fontSize: 13,
-    color: cores.preto,
-  },
-
-  metaBadge: {
-    width: 108,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: cores.branco,
-    borderWidth: 1,
-    borderColor: cores.azul,
-    borderRadius: 14,
-    padding: 10,
-    marginLeft: 12,
-  },
-
-  metaBadgeIcone: {
-    width: 22,
-    height: 22,
-    tintColor: cores.azul,
-    marginBottom: 6,
-  },
-
-  metaBadgeTitulo: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: cores.azul,
-    textAlign: "center",
-  },
-
-  metaBadgeSubtitulo: {
-    fontSize: 10,
-    color: cores.azul,
     textAlign: "center",
     marginTop: 2,
   },
@@ -420,6 +325,57 @@ const desempenhoStyles = StyleSheet.create({
     color: cores.branco,
     opacity: 0.85,
     textAlign: "center",
+  },
+
+  // Lista de últimas presenças (aba Frequência)
+  ultimaPresencaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: `${cores.branco}20`,
+  },
+
+  ultimaPresencaTextos: {
+    flex: 1,
+    marginRight: 8,
+  },
+
+  ultimaPresencaTitulo: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: cores.branco,
+  },
+
+  ultimaPresencaData: {
+    fontSize: 11,
+    color: cores.branco,
+    opacity: 0.8,
+    marginTop: 2,
+  },
+
+  btnJustificar: {
+    borderWidth: 1,
+    borderColor: cores.branco,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+
+  txtBtnJustificar: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: cores.branco,
+  },
+
+  justificativaStatusTexto: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: cores.branco,
+    opacity: 0.85,
+    maxWidth: 90,
+    textAlign: "right",
   },
 });
 
