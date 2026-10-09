@@ -495,6 +495,25 @@ export async function justificarFalta(idPresenca: number, motivo: string): Promi
   return resposta.message;
 }
 
+export type CardChatbot = {
+  type: "schedule" | "progress";
+  title: string;
+  items: Record<string, string | number>[];
+};
+
+export type RespostaChatbot = {
+  text: string;
+  sugestoes: string[];
+  card: CardChatbot | null;
+  offline?: boolean;
+};
+
+// Envia uma mensagem pro Assistente (IA) e devolve a resposta, sugestões de
+// pergunta e, às vezes, um card (agenda/progresso). Pode levar alguns segundos.
+export function enviarMensagemChatbot(mensagem: string) {
+  return apiPost<RespostaChatbot>("/aluno/chatbot/mensagem", { mensagem });
+}
+
 // "2026-07-30" → "30/07/2026".
 export function formatarData(data: string | null): string {
   if (!data) return "";
