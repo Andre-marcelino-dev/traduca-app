@@ -93,6 +93,16 @@ export default function HomeScreen() {
         ))}
       </ScrollView>
 
+      <Pressable
+        style={({ pressed }) => [
+          homeStyles.btnAssistente,
+          pressed && homeStyles.btnAssistentePressed,
+        ]}
+        onPress={() => router.navigate("/assistente")}
+      >
+        <Text style={homeStyles.btnAssistenteTexto}>AI</Text>
+      </Pressable>
+
       <CentralNotificacoesModal
         visible={modalNotificacoesVisivel}
         onClose={() => setModalNotificacoesVisivel(false)}

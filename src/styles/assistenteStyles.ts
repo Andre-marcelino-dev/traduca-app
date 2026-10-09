@@ -5,11 +5,11 @@ const assistenteStyles = StyleSheet.create({
   fundo: {
     flex: 1,
     backgroundColor: cores.preto,
-    justifyContent: "center",
     padding: 18,
   },
 
   cartao: {
+    flex: 1,
     width: "100%",
     maxWidth: 380,
     alignSelf: "center",
@@ -227,6 +227,125 @@ const assistenteStyles = StyleSheet.create({
     width: 18,
     height: 18,
     tintColor: cores.branco,
+  },
+
+  // Conversa
+  conversaArea: {
+    flex: 1,
+  },
+
+  conversaConteudo: {
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 10,
+  },
+
+  bolhaAluno: {
+    alignSelf: "flex-end",
+    backgroundColor: cores.azul,
+    borderRadius: 16,
+    borderBottomRightRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+    maxWidth: "82%",
+  },
+
+  bolhaAlunoTexto: {
+    fontSize: 13,
+    color: cores.branco,
+    lineHeight: 18,
+  },
+
+  bolhaIa: {
+    alignSelf: "flex-start",
+    backgroundColor: `${cores.azul}0D`,
+    borderRadius: 16,
+    borderBottomLeftRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 10,
+    maxWidth: "85%",
+  },
+
+  bolhaIaTexto: {
+    fontSize: 13,
+    color: cores.preto,
+    lineHeight: 18,
+  },
+
+  bolhaIaOffline: {
+    fontSize: 10,
+    color: cores.laranja,
+    fontWeight: "bold",
+    marginTop: 6,
+  },
+
+  sugestoesLinha: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 14,
+  },
+
+  sugestaoChip: {
+    borderWidth: 1,
+    borderColor: cores.azul,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+
+  sugestaoChipPressed: {
+    backgroundColor: `${cores.azul}15`,
+  },
+
+  sugestaoChipTexto: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: cores.azul,
+  },
+
+  cardChat: {
+    borderWidth: 1,
+    borderColor: cores.azul,
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 6,
+    alignSelf: "flex-start",
+    maxWidth: "85%",
+  },
+
+  cardChatTitulo: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: cores.azul,
+    marginBottom: 6,
+  },
+
+  cardChatItem: {
+    paddingVertical: 4,
+    borderTopWidth: 1,
+    borderTopColor: cores.cinza,
+  },
+
+  cardChatItemTexto: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: cores.preto,
+  },
+
+  cardChatItemSubtexto: {
+    fontSize: 11,
+    color: cores.cinzaEscuro,
+    marginTop: 1,
+  },
+
+  erroTextoChat: {
+    fontSize: 12,
+    color: cores.vermelho,
+    textAlign: "center",
+    marginVertical: 8,
   },
 });
 

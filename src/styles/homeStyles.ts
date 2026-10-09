@@ -104,6 +104,33 @@ const homeStyles = StyleSheet.create({
     fontWeight: "bold",
     color: cores.azul,
   },
+
+  btnAssistente: {
+    position: "absolute",
+    right: 20,
+    bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: cores.azul,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: cores.preto,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+
+  btnAssistentePressed: {
+    opacity: 0.85,
+  },
+
+  btnAssistenteTexto: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: cores.branco,
+  },
 });
 
 export default homeStyles;
