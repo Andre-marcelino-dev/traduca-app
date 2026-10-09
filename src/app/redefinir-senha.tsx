@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 
-import { View, Text, Image, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, Image, TextInput, Pressable, ActivityIndicator } from "react-native";
 
 import globalStyle from "@/styles/globalStyles";
 import redefinirSenhaStyle from "@/styles/redefinirSenhaStyle";
@@ -16,6 +16,7 @@ export default function RedefinirSenhaScreen() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [verSenha, setVerSenha] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState("");
 
   async function salvar() {
@@ -27,14 +28,39 @@ export default function RedefinirSenhaScreen() {
     setSalvando(true);
     try {
       await redefinirSenha(email.trim(), codigo.trim(), novaSenha, confirmarSenha);
-      Alert.alert("Senha redefinida!", "Faça login com a sua nova senha.", [
-        { text: "OK", onPress: () => router.replace("/") },
-      ]);
+      setSucesso(true);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível redefinir a senha.");
     } finally {
       setSalvando(false);
     }
+  }
+
+  if (sucesso) {
+    return (
+      <View style={globalStyle.container}>
+        <Image
+          source={require('@/assets/images/imgIcon/logo-traducaapp.png')}
+          style={globalStyle.logoMaior}
+          resizeMode="contain"
+        />
+        <View style={redefinirSenhaStyle.conteudo}>
+          <Text style={redefinirSenhaStyle.titulo}>Senha redefinida!</Text>
+          <Text style={redefinirSenhaStyle.subtitulo}>Faça login com a sua nova senha.</Text>
+          <View style={redefinirSenhaStyle.form}>
+            <Pressable
+              style={({ pressed }) => [
+                redefinirSenhaStyle.btnEntrar,
+                pressed && redefinirSenhaStyle.btnEntrarPressed,
+              ]}
+              onPress={() => router.replace("/")}
+            >
+              <Text style={redefinirSenhaStyle.txtEntrar}>Ir para o login</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    );
   }
 
   return (
