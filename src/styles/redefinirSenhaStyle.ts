@@ -93,6 +93,28 @@ const redefinirSenhaStyle = StyleSheet.create({
   btnEntrarPressed: {
     opacity: 0.8,
   },
+
+  btnDesabilitado: {
+    opacity: 0.6,
+  },
+
+  btnVoltarLogin: {
+    marginTop: 16,
+  },
+
+  txtVoltarLogin: {
+    fontSize: 14,
+    color: cores.azul,
+    textDecorationLine: "underline",
+  },
+
+  erroTexto: {
+    fontSize: 13,
+    color: cores.vermelho,
+    marginTop: 4,
+    marginBottom: 4,
+    textAlign: "center",
+  },
 });
  
 export default redefinirSenhaStyle;

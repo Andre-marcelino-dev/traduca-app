@@ -581,3 +581,60 @@ export async function loginAluno(email: string, senha: string): Promise<Aluno> {
   await salvarSessao();
   return json.data.aluno;
 }
+
+// Tela "Esqueci a senha": pede o código de 6 dígitos por e-mail.
+// Sempre retorna sucesso (mesma mensagem exista ou não o e-mail).
+export async function esqueciSenha(email: string): Promise<void> {
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${API_URL}/aluno/senha/esqueci`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ email_aluno: email }),
+    });
+  } catch {
+    throw new Error("Sem conexão com o servidor. Verifique sua internet.");
+  }
+
+  const json = await resposta.json().catch(() => null);
+
+  if (resposta.status === 429) {
+    throw new Error("Muitas tentativas. Aguarde um minuto e tente novamente.");
+  }
+  if (!resposta.ok || !json?.success) {
+    throw new Error(json?.message ?? "Não foi possível enviar o código.");
+  }
+}
+
+// Tela "Redefinir senha": confere o código recebido por e-mail e troca a senha.
+export async function redefinirSenha(
+  email: string,
+  codigo: string,
+  novaSenha: string,
+  confirmacao: string
+): Promise<void> {
+  let resposta: Response;
+  try {
+    resposta = await fetch(`${API_URL}/aluno/senha/redefinir`, {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email_aluno: email,
+        codigo,
+        nova_senha: novaSenha,
+        nova_senha_confirmation: confirmacao,
+      }),
+    });
+  } catch {
+    throw new Error("Sem conexão com o servidor. Verifique sua internet.");
+  }
+
+  const json = await resposta.json().catch(() => null);
+
+  if (resposta.status === 429) {
+    throw new Error("Muitas tentativas. Aguarde um minuto e tente novamente.");
+  }
+  if (!resposta.ok || !json?.success) {
+    throw new Error(json?.message ?? "Não foi possível redefinir a senha.");
+  }
+}

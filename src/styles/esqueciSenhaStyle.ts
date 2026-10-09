@@ -114,6 +114,17 @@ const esqueciSenhaStyle = StyleSheet.create({
       btnVoltarLoginPressed: {
         opacity: 0.8,
       },
+
+      btnDesabilitado: {
+        opacity: 0.6,
+      },
+
+      erroTexto: {
+        fontSize: 13,
+        color: cores.vermelho,
+        marginTop: 10,
+        textAlign: "center",
+      },
 });
 
 export default esqueciSenhaStyle;
