@@ -17,6 +17,7 @@ import {
   CursoModulos,
   ModuloDetalhe,
   primeiroNomeAluno,
+  tituloModulo,
 } from "@/services/api";
 import { cursoDaLista, escolherCurso, lerCursoEscolhido } from "@/services/curso-escolhido";
 import aulasStyles from "@/styles/aulasStyles";
@@ -138,6 +139,11 @@ export default function AulasScreen() {
             <View style={aulasStyles.nivelBadge}>
               <Text style={aulasStyles.nivelBadgeTexto}>{cursoAtual.nome_nivel}</Text>
             </View>
+            {modulo && (
+              <Text style={aulasStyles.moduloAtualTexto} numberOfLines={1}>
+                {tituloModulo(modulo.modulo.nome_modulo, modulo.modulo.ordem_modulo)}
+              </Text>
+            )}
           </View>
 
           <Pressable style={aulasStyles.btnAvancarCard} onPress={abrirModulo}>

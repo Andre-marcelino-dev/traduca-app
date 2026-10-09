@@ -35,6 +35,13 @@ const aulasStyles = StyleSheet.create({
     color: cores.branco,
   },
 
+  moduloAtualTexto: {
+    fontSize: 12,
+    color: cores.branco,
+    opacity: 0.85,
+    marginTop: 6,
+  },
+
   btnAvancarCard: {
     width: 34,
     height: 34,
