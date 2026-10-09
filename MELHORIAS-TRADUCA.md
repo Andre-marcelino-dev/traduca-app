@@ -1,6 +1,6 @@
 # Melhorias recomendadas — Traduca (app + site)
 
-Atualizado em 07/10/2026. Ordem = prioridade (o que está no topo é mais importante).
+Atualizado em 09/10/2026. Ordem = prioridade (o que está no topo é mais importante).
 
 ## Avaliação geral
 
@@ -17,52 +17,55 @@ Os pontos abaixo são ajustes, não problemas de estrutura.
 
 ---
 
-## 1. Para fazer já (próxima sessão)
+## 1. Próximos passos (em ordem)
 
-1. ✅ **Carga horária do módulo = soma das aulas** (backend) — feito e testado no local em 30/09.
-   Enviado pelo FileZilla e conferido no site no ar (30/09).
-2. ✅ **Botão "Sair da conta"** agora apaga o login no servidor e no aparelho (30/09).
-3. ✅ **Tela de login** leva direto para a Home quem já está logado; login vencido volta
-   sozinho para a tela de login (30/09).
-4. ✅ **Trabalho salvo no GitHub** (30/09): site PR #5 e app PR #1 juntados na `main`.
-5. ✅ **Migration da Fase 3 confirmada** (30/09): os campos "Nº da aula" e "Duração em minutos"
-   salvam normalmente no site no ar — prova de que a migration rodou.
-6. ✅ **Tela Aulas ligada ao banco** (30/09), só com a API que já existia. Testada;
-   bandeiras agora são desenhadas (aparecem também no Windows). Salva no GitHub (branch `tela-aulas`).
+1. **Notificações (sino)** — não existe no site, precisa ser criado do zero: definir o que notificar
+   (aula nova, atividade nova, material novo, resposta do professor numa dúvida), migration de uma
+   tabela nova, rota `GET /aluno/notificacoes`, e o sino no app (hoje é só decorativo).
+2. **(Sem pressa) Limpeza:**
+   - Testes antigos quebrados no site (`ChatbotDateTest` duplicado, testes do painel admin usando
+     `DATE_FORMAT`/`DATE_SUB` do MySQL rodando em SQLite) — não afetam o site no ar, só escondem
+     problemas novos nos testes.
+   - Remover a rota temporária `GET /sistema/diagnostico/{token}` (`routes/web.php`) depois que não
+     for mais necessária pra depurar erros em produção — ela limpa cache de config e mostra o fim do
+     log; é segura (protegida pelo `DEPLOY_SECRET`), mas é melhor não deixar ferramenta de debug
+     esquecida pra sempre.
+   - `EXPO_PUBLIC_API_URL` configurável no app, pra testar contra o backend local (`localhost:8081`)
+     sem precisar trocar código — ainda não existe.
 
-## 2. Fase 5 — telas que ainda usam dados de exemplo
+## 2. Fase 5 — telas ligadas ao banco de dados
 
-Já usam o banco: Login, Home, Config, Perfil (nome/e-mail/foto), Curso, Módulo, Materiais, Aulas.
+**Tudo que estava planejado na Fase 5 já está pronto, no ar e testado**, incluindo os itens que
+pareciam mais trabalhosos (Esqueci senha, Assistente). Só falta Notificações (item novo, nunca
+esteve no site).
 
-As telas abaixo **não dá para fazer só no app**: a API ainda não tem essas informações.
-A boa notícia: quase tudo já existe no **painel do aluno do site** — é só criar rotas na API
-copiando a regra dos controllers de `app/Http/Controllers/aluno/` (backend).
-
-### Como fazer cada tela (mesmo processo das outras fases)
+### Como fazer uma rota/tela nova (mesmo processo de sempre)
 
 1. Criar a rota em `routes/api.php` (grupo `auth:sanctum` do aluno) + controller em
-   `app/Http/Controllers/Api/V1/Aluno/`, reaproveitando a regra do controller do site.
-2. Testar no local (Docker) com um script de teste, como feito na carga horária.
-3. Pasta na Área de Trabalho + LEIA-ME → enviar pelo FileZilla.
-4. Ligar a tela no app (função nova em `src/services/api.ts`) e testar.
-5. Commit em branch → Pull Request no GitHub.
+   `app/Http/Controllers/Api/V1/Aluno/`, reaproveitando a regra do controller do site quando existir.
+2. Testar no local (Docker) com testes automatizados (PHPUnit).
+3. Pasta na Área de Trabalho + LEIA-ME → enviar pelo FileZilla; rodar migration pendente (se tiver)
+   em `https://traduca.adminfo.dev.br/sistema/migrate/<segredo>`.
+4. Ligar a tela no app (função nova em `src/services/api.ts`) e testar — de preferência no link fixo
+   publicado (`https://traduca-app.expo.app`, ver nota abaixo) ou no app instalado.
+5. Commit em branch → Pull Request no GitHub (nunca mesclar direto, sempre pelo botão do GitHub).
 
-### Ordem sugerida (do mais simples/útil para o mais trabalhoso)
+### Status de cada tela
 
-| # | Tela do app | Rota nova na API (sugestão) | De onde copiar a regra no site | Dificuldade |
+| # | Tela do app | Rota da API | De onde veio a regra | Status |
 |---|---|---|---|---|
-| 1 | ✅ **Agenda** + reagendamento (feito) | `GET /aluno/agenda` (aulas com data/hora) | `aluno/AulaController@index` | fácil |
-| 2 | ✅ **Perfil** (salvar e-mail, trocar foto) — feito 07/10 | `PUT /aluno/perfil/email`, `POST /aluno/perfil/foto` | `aluno/AuthController@atualizarEmail`, `@atualizarFoto` | fácil/média (foto = upload) |
-| 3 | ✅ **Alterar senha** (modal da Config) — feito 07/10 | `PUT /aluno/perfil/senha` | `aluno/AuthController@atualizarSenha` | fácil |
-| 4 | **Desempenho** | `GET /aluno/desempenho` | `aluno/ProgressoController@index` | média |
-| 5 | ✅ **Atividades** (feito 05/10 — falta subir pelo FileZilla: pasta `traduca_atualizacao_atividades`) | `GET /aluno/atividades`, `GET /aluno/atividades/{id}`, `POST .../responder` | `aluno/AtividadeController@index/show/responder` | média |
-| 6 | **Dúvida** | `GET /aluno/duvidas`, `POST /aluno/duvidas` | `aluno/DuvidaController@index/store` | fácil |
-| 7 | **Assistente** (chat) | `GET /aluno/chatbot/dados`, `POST /aluno/chatbot/mensagem` | `aluno/ChatbotController@dados/mensagem` | média (já tem limite de uso) |
-| 8 | **Esqueci / Redefinir senha** | `POST /aluno/senha/esqueci`, `POST /aluno/senha/redefinir` | **não existe no site** — criar do zero (envia e-mail com código/link) | trabalhosa (precisa e-mail configurado na Locaweb) |
-| 9 | **Notificações** (sino) | `GET /aluno/notificacoes` | **não existe no site** — definir o que notificar (aula nova, atividade, material) | trabalhosa |
+| 1 | Agenda + reagendamento | `GET /aluno/agenda`, `POST /aluno/reagendamento/solicitar` | `aluno/AulaController`, `aluno/ReagendamentoController` | ✅ feito |
+| 2 | Perfil (e-mail, foto) | `PUT /aluno/perfil/email`, `POST /aluno/perfil/foto` | `aluno/AuthController` | ✅ feito |
+| 3 | Alterar senha | `PUT /aluno/perfil/senha` | `aluno/AuthController` | ✅ feito |
+| 4 | Desempenho | `GET /aluno/cursos/{id}/desempenho`, `POST /aluno/presencas/{id}/justificar` | `aluno/ProgressoController` | ✅ feito, confirmado ao vivo 08/10 |
+| 5 | Atividades | `GET /aluno/atividades`, `GET /aluno/atividades/{id}`, `POST .../responder` | `aluno/AtividadeController` | ✅ feito |
+| 6 | Dúvida | `GET/POST /aluno/duvidas` | `aluno/DuvidaController` | ✅ feito, confirmado ao vivo 08/10 |
+| 7 | Assistente (chat) | `GET /aluno/chatbot/dados`, `POST /aluno/chatbot/mensagem` | `aluno/ChatbotController` | ✅ feito |
+| 8 | Esqueci / Redefinir senha | `POST /aluno/senha/esqueci`, `POST /aluno/senha/redefinir` | não existia no site — criado do zero | ✅ feito, confirmado ao vivo 09/10 (código de 6 dígitos por e-mail) |
+| 9 | Notificações (sino) | `GET /aluno/notificacoes` | não existe no site — definir o que notificar | ⬜ **próximo item** |
 
 Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/ForumController`),
-**Feedback** e **Reagendamento de aula** (`aluno/FeedbackController`, `aluno/ReagendamentoController`).
+**Feedback** (`aluno/FeedbackController`).
 
 ### Cuidados
 
@@ -70,39 +73,33 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
   precisa confirmar se existe na tabela do aluno antes de criar a rota.
 - Atualizar a documentação da API (`resources/views/api/documentacao.blade.php`) e o
   `RESUMO-API-TRADUCA.md` a cada rota nova.
-- Nenhuma dessas rotas deve precisar de migration, exceto Esqueci senha e Notificações.
 
 ## 3. Melhorias de segurança e qualidade
 
-- **Testes antigos quebrados no site** (achado em 05/10): `php artisan test` para logo no início
-  porque `tests/Feature/ChatbotDateTest.php` e `tests/Unit/chatbot/ChatbotDateTest.php` têm a mesma classe.
-  Rodando por pasta: 39 erros + 8 falhas que já existiam — testes do chatbot procuram classes
-  `App\Services\Chatbot*` que não existem, e testes do painel usam `DATE_FORMAT` (MySQL) no SQLite
-  de teste. Não afetam o site no ar, mas escondem problemas novos. Corrigir num PR separado.
-
-- ✅ **Segurança do login** (07/10):
-  - App: no celular o token fica no cofre do aparelho (`expo-secure-store`, `src/services/cofre.ts`);
-    no navegador continua no armazenamento do navegador. Quem já estava logado não precisa entrar de novo.
-  - Site: aluno **INATIVO** não entra no site nem no app; se for desativado logado, sai na hora
-    (tokens apagados). Login do app apaga as chaves vencidas.
-  - Site: saiu a aba "Esqueci minha senha" do perfil do aluno (trocava a senha só com o e-mail);
-    trocar a senha sempre pede a senha atual. Esqueceu: a escola redefine em Alunos > Editar.
-  - Tudo no ar e testado em 07/10 (pacote `traduca_atualizacao_login_perfil`, junto com Perfil e Alterar senha).
-- **Site: trocar o e-mail do aluno ainda não pede a senha atual** (achado em 07/10). Não rouba a conta,
-  mas alguém no computador do aluno logado poderia trocar o e-mail e deixá-lo sem entrar. No app já pede.
-- **Arquivo `src/public/traducaidiomas/alunos.zip` no projeto do site** (achado em 07/10, 5 MB, criado em 06/10):
-  não é do Git e **não pode ir para o GitHub** (repositório público; pode ter fotos de alunos).
-  Cuidado com `git add -A` no site; se ele não for mais necessário, apagar ou colocar no `.gitignore`.
-- **Endereço da API configurável** (`EXPO_PUBLIC_API_URL`). Assim dá para testar com o banco local
-  (`localhost:8081`) sem mexer no código — evita a confusão "cadastrei no local e não aparece no app".
-- **Aluno com mais de um curso:** a tela Aulas já deixa escolher o idioma; Curso e Materiais
-  ainda mostram só o primeiro curso. Guardar o curso escolhido e usar nas três telas.
-- **Tamanho do arquivo nos Materiais:** a API não envia; incluir no backend (`tamanho_bytes`).
+- ✅ **Segurança do login** (07/10): token no cofre do aparelho no app; aluno INATIVO bloqueado;
+  trocar e-mail/senha sempre pede a senha atual.
+- ✅ **Tamanho do arquivo nos Materiais** (08/10): `tamanho_bytes` incluído na API e mostrado no app.
+- ✅ **Aluno com mais de um curso** (07/10): o app guarda o curso/idioma escolhido
+  (`services/curso-escolhido.ts`) e usa em Curso, Materiais, Aulas e Desempenho.
+- ✅ **Arquivo `alunos.zip` solto no projeto do site** — não existe mais no servidor local, resolvido.
+- **Testes antigos quebrados no site** — ver item 1.2 acima (limpeza, sem pressa).
+- **Endereço da API configurável** (`EXPO_PUBLIC_API_URL`) — ver item 1.2 acima.
 - **Limpeza pequena no código:** indentação irregular no login. Rodar `npm run lint` de vez em quando.
 - **Publicação do site só pelo FileZilla:** funciona, mas é fácil esquecer um arquivo. No futuro,
   vale um deploy automático pelo GitHub (a Locaweb aceita FTP em GitHub Actions) — só se você quiser.
 
-## 4. Como cadastrar no painel para aparecer no app (lembrete)
+## 4. Lições aprendidas (pra não repetir)
+
+- **Link publicado do app tem endereço fixo:** `https://traduca-app.expo.app` não muda a cada
+  publicação (ao contrário dos links `traduca-app--xxxxxxx.expo.app`, que são aleatórios a cada
+  `eas deploy`). Usar sempre esse link fixo pra testar, e publicar com `eas deploy --prod`.
+- **Cuidado com textos de exemplo em instruções** (tipo `<DEPLOY_SECRET>` numa URL): são pra
+  **trocar pelo valor de verdade**, não pra copiar/colar do jeito que está escrito.
+- **Sempre rodar a migration de verdade depois do FileZilla**, abrindo
+  `https://traduca.adminfo.dev.br/sistema/migrate/<segredo>` com o valor real — e conferir que
+  apareceu "DONE", não um erro 404.
+
+## 5. Como cadastrar no painel para aparecer no app (lembrete)
 
 1. **Módulos:** curso + nível iguais aos da matrícula do aluno, ordem, status ATIVO.
 2. **Aulas:** escolher o **Módulo** (se ficar vazio, a aula não aparece no app), duração em minutos.
