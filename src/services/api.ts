@@ -521,6 +521,27 @@ export function formatarData(data: string | null): string {
   return `${dia}/${mes}/${ano}`;
 }
 
+export type Notificacao = {
+  id: number;
+  mensagem: string;
+  link: string | null; // tela do app que abre ao tocar (ex.: "/atividade?id=12")
+  lida: boolean;
+  data: string | null; // "2026-10-10 14:30"
+};
+
+// Sino: avisos do aluno + quantos não lidos.
+export function buscarNotificacoes() {
+  return apiGet<{ nao_lidas: number; notificacoes: Notificacao[] }>("/aluno/notificacoes");
+}
+
+export async function marcarNotificacaoLida(id: number): Promise<void> {
+  await apiPost(`/aluno/notificacoes/${id}/lida`, {});
+}
+
+export async function marcarTodasNotificacoesLidas(): Promise<void> {
+  await apiPost("/aluno/notificacoes/lidas", {});
+}
+
 // Nome do módulo para a tela: se já foi cadastrado como "Módulo 01: ...", usa como está;
 // senão monta "Módulo Fundamentos 01".
 export function tituloModulo(nome: string, ordem: number): string {
