@@ -121,6 +121,59 @@ const centralNotificacoesStyle = StyleSheet.create({
     fontWeight: "bold",
     color: cores.azul,
   },
+
+  // Lista com rolagem (pode ter até 50 avisos).
+  lista: {
+    maxHeight: 380,
+    marginBottom: 8,
+  },
+
+  // Aviso já lido: mais apagado.
+  itemLido: {
+    borderColor: cores.cinza,
+    opacity: 0.7,
+  },
+
+  pontoNaoLido: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: cores.vermelho,
+  },
+
+  vazio: {
+    fontSize: 13,
+    color: cores.cinzaEscuro,
+    textAlign: "center",
+    marginVertical: 24,
+  },
+
+  btnDesabilitado: {
+    opacity: 0.4,
+  },
+
+  // Número vermelho em cima do sino.
+  contador: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: cores.vermelho,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  contadorTexto: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: cores.branco,
+  },
 });
 
 export default centralNotificacoesStyle;
