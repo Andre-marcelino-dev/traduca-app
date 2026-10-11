@@ -1,6 +1,6 @@
 # Melhorias recomendadas — Traduca (app + site)
 
-Atualizado em 09/10/2026. Ordem = prioridade (o que está no topo é mais importante).
+Atualizado em 11/10/2026. Ordem = prioridade (o que está no topo é mais importante).
 
 ## Avaliação geral
 
@@ -19,25 +19,26 @@ Os pontos abaixo são ajustes, não problemas de estrutura.
 
 ## 1. Próximos passos (em ordem)
 
-1. **Notificações (sino)** — não existe no site, precisa ser criado do zero: definir o que notificar
-   (aula nova, atividade nova, material novo, resposta do professor numa dúvida), migration de uma
-   tabela nova, rota `GET /aluno/notificacoes`, e o sino no app (hoje é só decorativo).
-2. **(Sem pressa) Limpeza:**
+1. ✅ **Notificações (sino)** — feito em 10/10 (site PR #20, app PR #15, app republicado).
+   Usa a tabela `tbl_notificacoes` que já existia (sem migration). `App\Support\Notificar` cria os
+   avisos quando o professor cadastra aula/atividade/material, corrige atividade, responde dúvida ou
+   reagendamento; o app mostra o número no sino e abre a tela certa ao tocar no aviso.
+2. ✅ **Rota temporária `/sistema/diagnostico`** — removida em 11/10 (pacote
+   `traduca_atualizacao_remove_diagnostico`, 1 arquivo). `/sistema/migrate` continua.
+3. **(Sem pressa) Limpeza que falta:**
    - Testes antigos quebrados no site (`ChatbotDateTest` duplicado, testes do painel admin usando
-     `DATE_FORMAT`/`DATE_SUB` do MySQL rodando em SQLite) — não afetam o site no ar, só escondem
-     problemas novos nos testes.
-   - Remover a rota temporária `GET /sistema/diagnostico/{token}` (`routes/web.php`) depois que não
-     for mais necessária pra depurar erros em produção — ela limpa cache de config e mostra o fim do
-     log; é segura (protegida pelo `DEPLOY_SECRET`), mas é melhor não deixar ferramenta de debug
-     esquecida pra sempre.
+     `DATE_FORMAT`/`DATE_SUB` do MySQL rodando em SQLite, tabela `tbl_servicos` sem migration —
+     a página 404 do site lê essa tabela) — não afetam o site no ar, só escondem problemas novos.
    - `EXPO_PUBLIC_API_URL` configurável no app, pra testar contra o backend local (`localhost:8081`)
      sem precisar trocar código — ainda não existe.
+   - Git antigo esquecido dentro da pasta `src/` do site (`src/.git`, de 28/09, sem GitHub) —
+     não atrapalha; sempre rodar o git a partir da raiz do projeto.
 
 ## 2. Fase 5 — telas ligadas ao banco de dados
 
 **Tudo que estava planejado na Fase 5 já está pronto, no ar e testado**, incluindo os itens que
-pareciam mais trabalhosos (Esqueci senha, Assistente). Só falta Notificações (item novo, nunca
-esteve no site).
+pareciam mais trabalhosos (Esqueci senha, Assistente), e também as Notificações (item novo,
+feito em 10/10).
 
 ### Como fazer uma rota/tela nova (mesmo processo de sempre)
 
@@ -62,7 +63,7 @@ esteve no site).
 | 6 | Dúvida | `GET/POST /aluno/duvidas` | `aluno/DuvidaController` | ✅ feito, confirmado ao vivo 08/10 |
 | 7 | Assistente (chat) | `GET /aluno/chatbot/dados`, `POST /aluno/chatbot/mensagem` | `aluno/ChatbotController` | ✅ feito |
 | 8 | Esqueci / Redefinir senha | `POST /aluno/senha/esqueci`, `POST /aluno/senha/redefinir` | não existia no site — criado do zero | ✅ feito, confirmado ao vivo 09/10 (código de 6 dígitos por e-mail) |
-| 9 | Notificações (sino) | `GET /aluno/notificacoes` | não existe no site — definir o que notificar | ⬜ **próximo item** |
+| 9 | Notificações (sino) | `GET /aluno/notificacoes`, `POST /aluno/notificacoes/{id}/lida`, `POST /aluno/notificacoes/lidas` | não existia no site — `App\Support\Notificar` + tabela `tbl_notificacoes` | ✅ feito, confirmado ao vivo 10/10 |
 
 Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/ForumController`),
 **Feedback** (`aluno/FeedbackController`).
@@ -98,6 +99,9 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
 - **Sempre rodar a migration de verdade depois do FileZilla**, abrindo
   `https://traduca.adminfo.dev.br/sistema/migrate/<segredo>` com o valor real — e conferir que
   apareceu "DONE", não um erro 404.
+- **Atualizar o app dos alunos são sempre 2 comandos:** `npx expo export --platform web` e depois
+  `npx eas deploy --prod`. No final tem que aparecer "Production URL https://traduca-app.expo.app";
+  sem o `--prod` ele só cria um link de teste.
 
 ## 5. Como cadastrar no painel para aparecer no app (lembrete)
 
