@@ -5,7 +5,15 @@ import { router } from "expo-router";
 import { apagarToken, guardarToken, lerToken } from "@/services/cofre";
 import { esquecerCursoEscolhido } from "@/services/curso-escolhido";
 
-export const API_URL = "https://traduca.adminfo.dev.br/api/v1";
+// Site no ar. Para testar com o site local (Docker), crie o arquivo .env.local
+// na pasta do app com: EXPO_PUBLIC_SITE_URL=http://localhost:8081
+// Trava de segurança: o endereço do .env.local só vale no "npx expo start"
+// (__DEV__). O app publicado para os alunos SEMPRE usa o site no ar, mesmo
+// que o .env.local tenha ficado esquecido no computador.
+const SITE_NO_AR = "https://traduca.adminfo.dev.br";
+export const SITE_URL = ((__DEV__ && process.env.EXPO_PUBLIC_SITE_URL) || SITE_NO_AR).replace(/\/+$/, "");
+
+export const API_URL = `${SITE_URL}/api/v1`;
 
 // Chave onde os dados do aluno (nome, e-mail, foto) ficam salvos no aparelho.
 // O token NÃO fica aqui: no celular ele vai para o cofre (ver cofre.ts).
@@ -565,7 +573,7 @@ export function formatarDuracao(minutos: number): string {
 // Endereço da foto do aluno logado (ou null se ele não tiver foto).
 export function fotoAlunoUrl(): string | null {
   const foto = sessao.aluno?.foto_aluno;
-  return foto ? `https://traduca.adminfo.dev.br/traducaidiomas/alunos/${foto}` : null;
+  return foto ? `${SITE_URL}/traducaidiomas/alunos/${foto}` : null;
 }
 
 // Primeiro nome do aluno logado, para as saudações.

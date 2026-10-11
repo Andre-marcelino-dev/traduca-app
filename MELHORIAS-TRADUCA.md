@@ -25,14 +25,16 @@ Os pontos abaixo são ajustes, não problemas de estrutura.
    reagendamento; o app mostra o número no sino e abre a tela certa ao tocar no aviso.
 2. ✅ **Rota temporária `/sistema/diagnostico`** — removida em 11/10 (pacote
    `traduca_atualizacao_remove_diagnostico`, 1 arquivo). `/sistema/migrate` continua.
-3. **(Sem pressa) Limpeza que falta:**
-   - Testes antigos quebrados no site (`ChatbotDateTest` duplicado, testes do painel admin usando
-     `DATE_FORMAT`/`DATE_SUB` do MySQL rodando em SQLite, tabela `tbl_servicos` sem migration —
-     a página 404 do site lê essa tabela) — não afetam o site no ar, só escondem problemas novos.
-   - `EXPO_PUBLIC_API_URL` configurável no app, pra testar contra o backend local (`localhost:8081`)
-     sem precisar trocar código — ainda não existe.
-   - Git antigo esquecido dentro da pasta `src/` do site (`src/.git`, de 28/09, sem GitHub) —
-     não atrapalha; sempre rodar o git a partir da raiz do projeto.
+3. ✅ **Endereço do site configurável no app** (11/10): para testar com o site local, criar
+   `.env.local` com `EXPO_PUBLIC_SITE_URL=http://localhost:8081` (modelo em `.env.example`).
+   Trava de segurança: só vale no `npx expo start`; o app publicado sempre usa o site no ar
+   (testado: com `.env.local` presente, o `expo export` continuou apontando para o site no ar).
+4. ✅ **Git antigo dentro de `src/` do site** (11/10): removido; cópia em
+   `Área de Trabalho\backup_git_antigo_site_2026-06-16.tar.gz` (único commit, de 16/06).
+5. **(Sem pressa) Testes antigos quebrados no site** (`ChatbotDateTest` duplicado, testes do
+   painel admin usando `DATE_FORMAT`/`DATE_SUB` do MySQL rodando em SQLite, tabela `tbl_servicos`
+   sem migration — a página 404 do site lê essa tabela) — não afetam o site no ar, só escondem
+   problemas novos. Hoje: 39 erros + 8 falhas, todos antigos.
 
 ## 2. Fase 5 — telas ligadas ao banco de dados
 
@@ -83,8 +85,8 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
 - ✅ **Aluno com mais de um curso** (07/10): o app guarda o curso/idioma escolhido
   (`services/curso-escolhido.ts`) e usa em Curso, Materiais, Aulas e Desempenho.
 - ✅ **Arquivo `alunos.zip` solto no projeto do site** — não existe mais no servidor local, resolvido.
-- **Testes antigos quebrados no site** — ver item 1.2 acima (limpeza, sem pressa).
-- **Endereço da API configurável** (`EXPO_PUBLIC_API_URL`) — ver item 1.2 acima.
+- **Testes antigos quebrados no site** — ver item 1.5 acima (limpeza, sem pressa).
+- ✅ **Endereço do site configurável** (`EXPO_PUBLIC_SITE_URL` no `.env.local`) — ver item 1.3 acima.
 - **Limpeza pequena no código:** indentação irregular no login. Rodar `npm run lint` de vez em quando.
 - **Publicação do site só pelo FileZilla:** funciona, mas é fácil esquecer um arquivo. No futuro,
   vale um deploy automático pelo GitHub (a Locaweb aceita FTP em GitHub Actions) — só se você quiser.
