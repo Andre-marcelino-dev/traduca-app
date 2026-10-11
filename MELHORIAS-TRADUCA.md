@@ -19,6 +19,9 @@ Os pontos abaixo são ajustes, não problemas de estrutura.
 
 ## 1. Próximos passos (em ordem)
 
+**Situação em 11/10/2026: lista 100% concluída.** Site e app no ar, no GitHub (`main`) e com
+todos os testes do site passando (`php artisan test`: 131 de 131). Não há pendência aberta.
+
 1. ✅ **Notificações (sino)** — feito em 10/10 (site PR #20, app PR #15, app republicado).
    Usa a tabela `tbl_notificacoes` que já existia (sem migration). `App\Support\Notificar` cria os
    avisos quando o professor cadastra aula/atividade/material, corrige atividade, responde dúvida ou
@@ -31,10 +34,18 @@ Os pontos abaixo são ajustes, não problemas de estrutura.
    (testado: com `.env.local` presente, o `expo export` continuou apontando para o site no ar).
 4. ✅ **Git antigo dentro de `src/` do site** (11/10): removido; cópia em
    `Área de Trabalho\backup_git_antigo_site_2026-06-16.tar.gz` (único commit, de 16/06).
-5. **(Sem pressa) Testes antigos quebrados no site** (`ChatbotDateTest` duplicado, testes do
-   painel admin usando `DATE_FORMAT`/`DATE_SUB` do MySQL rodando em SQLite, tabela `tbl_servicos`
-   sem migration — a página 404 do site lê essa tabela) — não afetam o site no ar, só escondem
-   problemas novos. Hoje: 39 erros + 8 falhas, todos antigos.
+5. ✅ **Testes antigos quebrados no site** (11/10, site PR #22): `php artisan test` voltou a rodar
+   (tirada a classe de teste duplicada), o painel ("aulas por mês") funciona no MySQL e no SQLite
+   dos testes, e foi **apagado o chatbot antigo** (`App\Http\Controllers\ChatbotController` + 4
+   classes de serviço), que nenhuma rota usava. O chatbot em uso (aluno, professor e app) continua
+   e segue testado. O código antigo fica no histórico do Git se um dia for preciso.
+6. ✅ **Menu do site destaca a página atual** (11/10): o cabeçalho comparava com `sobre.php`,
+   `contato.php` (nomes do site antigo em PHP) e nunca marcava nada; agora usa o nome das rotas.
+   Pacote `traduca_atualizacao_menu` (1 arquivo). Teste: `MenuAtivoTest`.
+
+**Dica para testes de página 404 no site:** a página "não encontrado" lê o menu de serviços do
+banco; em testes sem `RefreshDatabase`, conferir o 404 com `withoutExceptionHandling()` +
+`NotFoundHttpException` (ver `SistemaRotasTest`).
 
 ## 2. Fase 5 — telas ligadas ao banco de dados
 
@@ -85,7 +96,7 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
 - ✅ **Aluno com mais de um curso** (07/10): o app guarda o curso/idioma escolhido
   (`services/curso-escolhido.ts`) e usa em Curso, Materiais, Aulas e Desempenho.
 - ✅ **Arquivo `alunos.zip` solto no projeto do site** — não existe mais no servidor local, resolvido.
-- **Testes antigos quebrados no site** — ver item 1.5 acima (limpeza, sem pressa).
+- ✅ **Testes do site** — todos passando (131 de 131) desde 11/10; ver item 1.5 acima.
 - ✅ **Endereço do site configurável** (`EXPO_PUBLIC_SITE_URL` no `.env.local`) — ver item 1.3 acima.
 - **Limpeza pequena no código:** indentação irregular no login. Rodar `npm run lint` de vez em quando.
 - **Publicação do site só pelo FileZilla:** funciona, mas é fácil esquecer um arquivo. No futuro,
