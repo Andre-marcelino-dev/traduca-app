@@ -33,6 +33,47 @@ function IconeFechar() {
   );
 }
 
+// Telas do app que um aviso pode abrir.
+const TELAS_DO_APP = [
+  "agenda", "assistente", "atividade", "atividades", "aulas", "config", "curso",
+  "curso-modulo", "desempenho", "duvida", "home", "materiais", "perfil",
+];
+
+// Nome usado pelo site antigo -> tela do app (avisos criados antes do sino do app).
+const NOMES_DO_SITE: Record<string, string> = {
+  reagendamento: "agenda",
+  reagendamentos: "agenda",
+  duvidas: "duvida",
+  progresso: "desempenho",
+  dashboard: "home",
+  dash: "home",
+};
+
+// Transforma o link do aviso numa tela do app que existe, ou null (aí o
+// aviso só é marcado como lido). Avisos antigos têm links do site, como
+// "https://traduca.adminfo.dev.br/aluno/reagendamentos" ou "/aluno/atividades/12".
+export function rotaDoAviso(link: string | null): string | null {
+  if (!link) return null;
+
+  // Tira o domínio e o "/aluno/" do site; separa a "?query".
+  let caminho = link.trim().replace(/^https?:\/\/[^/]+/i, "");
+  const [semQuery, query = ""] = caminho.split("?");
+  const partes = semQuery.split("/").filter(Boolean);
+  if (partes[0] === "aluno") partes.shift();
+  if (partes.length === 0) return null;
+
+  const nome = NOMES_DO_SITE[partes[0]] ?? partes[0];
+
+  // Site: /aluno/atividades/12 -> app: /atividade?id=12
+  if (nome === "atividades" && /^\d+$/.test(partes[1] ?? "")) {
+    return `/atividade?id=${partes[1]}`;
+  }
+  if (!TELAS_DO_APP.includes(nome)) return null;
+
+  caminho = `/${nome}`;
+  return query ? `${caminho}?${query}` : caminho;
+}
+
 // Ícone pela tela que o aviso abre.
 function iconeDoAviso(link: string | null) {
   if (link?.startsWith("/agenda")) return require("@/assets/images/imgIcon/calendario-azul.png");
@@ -98,9 +139,11 @@ export default function CentralNotificacoesModal({
       onNaoLidas?.(Math.max(naoLidas - 1, 0));
       marcarNotificacaoLida(aviso.id).catch(() => {});
     }
-    if (aviso.link) {
+    // Só abre se for uma tela que existe no app (senão daria "Unmatched Route").
+    const rota = rotaDoAviso(aviso.link);
+    if (rota) {
       onClose();
-      router.navigate(aviso.link as never);
+      router.navigate(rota as never);
     }
   }
 
@@ -154,7 +197,7 @@ export default function CentralNotificacoesModal({
 
                     <View style={centralNotificacoesStyle.itemIconeBox}>
                       <Image
-                        source={iconeDoAviso(aviso.link)}
+                        source={iconeDoAviso(rotaDoAviso(aviso.link))}
                         style={centralNotificacoesStyle.itemIcone}
                         resizeMode="contain"
                       />
