@@ -115,6 +115,12 @@ Também existem no site e podem virar telas no app depois: **Fórum** (`aluno/Fo
 - **Atualizar o app dos alunos são sempre 2 comandos:** `npx expo export --platform web` e depois
   `npx eas deploy --prod`. No final tem que aparecer "Production URL https://traduca-app.expo.app";
   sem o `--prod` ele só cria um link de teste.
+- **Cuidado com links antigos salvos no navegador/favoritos:** em 13/10 o usuário testou num link
+  bem diferente, `aplicativo--xxxxxxx.expo.app` (nem é o nome deste projeto, que é `traduca-app`) —
+  provavelmente um teste bem antigo que ficou salvo. Nesse link o sino de notificações e o botão
+  "Reagendar" pareciam não funcionar; no link oficial (`https://traduca-app.expo.app`) funcionou
+  normalmente. Se algo "não funciona" só para o usuário mas o código parece certo, a primeira
+  pergunta é "em que link você está testando?".
 
 ## 5. Como cadastrar no painel para aparecer no app (lembrete)
 
