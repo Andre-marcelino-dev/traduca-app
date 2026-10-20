@@ -59,3 +59,8 @@ export function ouvirAudioAtividade(atividade: AtividadeResumo) {
   const nome = montarNome(atividade.titulo, `atividade_${atividade.id_atividade}`, atividade.extensao_audio);
   return abrirArquivoProtegido(atividade.url_audio, nome, "ver");
 }
+
+// Ouve a gravação que o próprio aluno enviou como resposta de uma questão de áudio.
+export function ouvirRespostaAudio(urlRespostaAudio: string, numeroQuestao: number) {
+  return abrirArquivoProtegido(urlRespostaAudio, `resposta_${numeroQuestao}`, "ver");
+}

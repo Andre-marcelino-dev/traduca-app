@@ -41,6 +41,12 @@
           "photosPermission": "O Traduca usa suas fotos para você escolher a foto do seu perfil.",
           "cameraPermission": "O Traduca usa a câmera para você tirar a foto do seu perfil."
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "O Traduca usa o microfone para você gravar a resposta das atividades de áudio."
+        }
       ]
     ],
     "experiments": {
