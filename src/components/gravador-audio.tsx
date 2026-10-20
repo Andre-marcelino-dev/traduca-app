@@ -8,7 +8,6 @@ import {
   useAudioPlayer,
   useAudioPlayerStatus,
   useAudioRecorder,
-  useAudioRecorderState,
 } from "expo-audio";
 
 import { enviarRespostaAudio } from "@/services/api";
@@ -42,11 +41,12 @@ export default function GravadorAudio({
   onEnviado,
 }: GravadorAudioProps) {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  const estadoGravador = useAudioRecorderState(recorder);
   const player = useAudioPlayer(null);
   const statusPlayer = useAudioPlayerStatus(player);
 
   const [regravando, setRegravando] = useState(false);
+  const [preparando, setPreparando] = useState(false);
+  const [gravando, setGravando] = useState(false);
   const [uriLocal, setUriLocal] = useState<string | null>(null);
   const [segundos, setSegundos] = useState(0);
   const [enviando, setEnviando] = useState(false);
@@ -63,6 +63,7 @@ export default function GravadorAudio({
 
   async function iniciarGravacao() {
     setErro("");
+    setPreparando(true);
     try {
       const { granted } = await AudioModule.requestRecordingPermissionsAsync();
       if (!granted) {
@@ -72,10 +73,17 @@ export default function GravadorAudio({
       await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
+      setGravando(true);
       setSegundos(0);
       cronometro.current = setInterval(() => setSegundos((s) => s + 1), 1000);
-    } catch {
-      setErro("Não foi possível acessar o microfone.");
+    } catch (e) {
+      setErro(
+        e instanceof Error && e.message
+          ? `Não foi possível acessar o microfone (${e.message}).`
+          : "Não foi possível acessar o microfone."
+      );
+    } finally {
+      setPreparando(false);
     }
   }
 
@@ -84,14 +92,19 @@ export default function GravadorAudio({
       clearInterval(cronometro.current);
       cronometro.current = null;
     }
+    setGravando(false);
     try {
       await recorder.stop();
       if (recorder.uri) {
         setUriLocal(recorder.uri);
         player.replace(recorder.uri);
       }
-    } catch {
-      setErro("Não foi possível terminar a gravação. Tente de novo.");
+    } catch (e) {
+      setErro(
+        e instanceof Error && e.message
+          ? `Não foi possível terminar a gravação (${e.message}).`
+          : "Não foi possível terminar a gravação. Tente de novo."
+      );
     }
   }
 
@@ -99,6 +112,7 @@ export default function GravadorAudio({
     player.pause();
     setUriLocal(null);
     setSegundos(0);
+    setGravando(false);
     setRegravando(false);
   }
 
@@ -217,7 +231,7 @@ export default function GravadorAudio({
   }
 
   // Gravando agora.
-  if (estadoGravador.isRecording) {
+  if (gravando) {
     return (
       <View style={{ alignItems: "center" }}>
         <Pressable style={gravadorAudioStyles.btnGravando} onPress={pararGravacao}>
@@ -231,12 +245,22 @@ export default function GravadorAudio({
   // Estado inicial: ainda não gravou nada.
   return (
     <View>
-      <Pressable style={gravadorAudioStyles.btnMicrofone} onPress={iniciarGravacao}>
-        <Image
-          source={require("@/assets/images/imgIcon/microfone-atividade.png")}
-          style={gravadorAudioStyles.iconeMicrofone}
-        />
-        <Text style={gravadorAudioStyles.txtMicrofone}>Toque para gravar sua resposta</Text>
+      <Pressable
+        style={gravadorAudioStyles.btnMicrofone}
+        onPress={iniciarGravacao}
+        disabled={preparando}
+      >
+        {preparando ? (
+          <ActivityIndicator color={cores.vermelho} />
+        ) : (
+          <>
+            <Image
+              source={require("@/assets/images/imgIcon/microfone-atividade.png")}
+              style={gravadorAudioStyles.iconeMicrofone}
+            />
+            <Text style={gravadorAudioStyles.txtMicrofone}>Toque para gravar sua resposta</Text>
+          </>
+        )}
       </Pressable>
       {erro ? <Text style={atividadeStyles.txtErro}>{erro}</Text> : null}
     </View>
