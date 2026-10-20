@@ -39,6 +39,13 @@ const iconePadrao = require("@/assets/images/imgIcon/atividade.png");
 // Nota 8.5 → "8,5".
 const textoNota = (nota: number) => String(nota).replace(".", ",");
 
+// 8 a 10 verde, 5 a 7 amarelo, 0 a 4 vermelho.
+function corDaNota(nota: number): string {
+  if (nota >= 8) return cores.verde;
+  if (nota >= 5) return cores.laranja;
+  return cores.vermelho;
+}
+
 export default function AtividadesScreen() {
   const [cursos, setCursos] = useState<Curso[]>([]);
   const [atividades, setAtividades] = useState<AtividadeResumo[]>([]);
@@ -243,12 +250,17 @@ export default function AtividadesScreen() {
                   ) : null}
                 </View>
 
-                <View style={[atividadesStyles.statusBadge, { backgroundColor: `${status.cor}22` }]}>
-                  <Text style={[atividadesStyles.statusBadgeTexto, { color: status.cor }]}>
-                    {status.texto}
-                    {atividade.nota !== null ? ` · ${textoNota(atividade.nota)}` : ""}
-                  </Text>
-                </View>
+                {(() => {
+                  const corBadge = atividade.nota !== null ? corDaNota(atividade.nota) : status.cor;
+                  return (
+                    <View style={[atividadesStyles.statusBadge, { backgroundColor: `${corBadge}22` }]}>
+                      <Text style={[atividadesStyles.statusBadgeTexto, { color: corBadge }]}>
+                        {status.texto}
+                        {atividade.nota !== null ? ` · ${textoNota(atividade.nota)}` : ""}
+                      </Text>
+                    </View>
+                  );
+                })()}
               </View>
 
               {atividade.professor ? (

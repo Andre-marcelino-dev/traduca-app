@@ -25,6 +25,13 @@ const statusInfo: Record<StatusAtividade, { texto: string; cor: string }> = {
 
 const textoNota = (nota: number) => String(nota).replace(".", ",");
 
+// 8 a 10 verde, 5 a 7 amarelo, 0 a 4 vermelho.
+function corDaNota(nota: number): string {
+  if (nota >= 8) return cores.verde;
+  if (nota >= 5) return cores.laranja;
+  return cores.vermelho;
+}
+
 // O professor às vezes digita a letra dentro da opção ("(B) November 26th");
 // a letra já aparece no círculo, então tira a repetida: "(B) ", "B) ", "B. ", "B - ".
 function textoDaOpcao(letra: string, texto: string): string {
@@ -197,22 +204,25 @@ export default function AtividadeScreen() {
       </View>
 
       {/* Correção do professor */}
-      {dados.status === "corrigida" && (
-        <View style={atividadeStyles.cardCorrecao}>
-          <Text style={atividadeStyles.correcaoRotulo}>Nota</Text>
-          <Text style={atividadeStyles.correcaoNota}>
-            {dados.nota !== null ? textoNota(dados.nota) : "—"}
-          </Text>
-          {dados.feedback_professor ? (
-            <>
-              <Text style={[atividadeStyles.correcaoRotulo, { marginTop: 8 }]}>
-                Feedback do professor
-              </Text>
-              <Text style={atividadeStyles.correcaoFeedback}>{dados.feedback_professor}</Text>
-            </>
-          ) : null}
-        </View>
-      )}
+      {dados.status === "corrigida" && (() => {
+        const cor = dados.nota !== null ? corDaNota(dados.nota) : cores.verde;
+        return (
+          <View style={[atividadeStyles.cardCorrecao, { borderColor: cor, backgroundColor: `${cor}15` }]}>
+            <Text style={[atividadeStyles.correcaoRotulo, { color: cor }]}>Nota</Text>
+            <Text style={[atividadeStyles.correcaoNota, { color: cor }]}>
+              {dados.nota !== null ? textoNota(dados.nota) : "—"}
+            </Text>
+            {dados.feedback_professor ? (
+              <>
+                <Text style={[atividadeStyles.correcaoRotulo, { color: cor, marginTop: 8 }]}>
+                  Feedback do professor
+                </Text>
+                <Text style={atividadeStyles.correcaoFeedback}>{dados.feedback_professor}</Text>
+              </>
+            ) : null}
+          </View>
+        );
+      })()}
 
       {dados.status === "enviada" && (
         <Text style={atividadeStyles.avisoEnviada}>
