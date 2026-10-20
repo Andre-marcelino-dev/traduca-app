@@ -41,12 +41,6 @@ const appItens: ItemConfig[] = [
     acao: "instalar",
   },
   {
-    titulo: "Personalizar app",
-    subtitulo: "Personalize seu aplicativo",
-    icone: require("@/assets/images/imgIcon/personalizar-azul.png"),
-    acao: "seta",
-  },
-  {
     titulo: "Ativar notificações",
     subtitulo: "Receba avisos sobre atividades e aulas",
     icone: require("@/assets/images/imgIcon/sino-azul.png"),
@@ -154,11 +148,7 @@ export default function ConfigScreen() {
         <Text style={configStyles.secaoTitulo}>App</Text>
         {appItens.map((item) => {
           const onPress =
-            item.titulo === "Instalar aplicativo"
-              ? () => setModalIphoneVisivel(true)
-              : item.titulo === "Personalizar app"
-                ? () => router.navigate("/personalizar")
-                : undefined;
+            item.titulo === "Instalar aplicativo" ? () => setModalIphoneVisivel(true) : undefined;
 
           return <ItemLista key={item.titulo} item={{ ...item, onPress }} />;
         })}
