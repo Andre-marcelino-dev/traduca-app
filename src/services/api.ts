@@ -412,9 +412,10 @@ export type QuestaoAtividade = {
   id_questao: number;
   numero: number;
   enunciado: string;
-  tipo: "multipla_escolha" | "texto";
+  tipo: "multipla_escolha" | "texto" | "audio";
   opcoes: { letra: string; texto: string }[];
   resposta_aluno: string | null;
+  url_resposta_audio: string | null;
   correta: boolean | null;
 };
 
@@ -438,6 +439,26 @@ export function buscarAtividade(id: string | number) {
 // Envia as respostas ({ id_questao: "B" | "texto" }). Devolve a mensagem de sucesso.
 export async function responderAtividade(id: number, respostas: Record<number, string>) {
   const resposta = await apiPost<{ message: string }>(`/aluno/atividades/${id}/responder`, { respostas });
+  return resposta.message;
+}
+
+// Envia a gravação de uma questão de áudio (uri do celular, ou o Blob no navegador).
+export async function enviarRespostaAudio(
+  idAtividade: number,
+  idQuestao: number,
+  audio: { uri: string; nome: string; tipo: string; arquivoWeb?: Blob }
+): Promise<string> {
+  const formulario = new FormData();
+  if (audio.arquivoWeb) {
+    formulario.append("audio", audio.arquivoWeb, audio.nome);
+  } else {
+    // No celular o React Native aceita { uri, name, type } no lugar do arquivo.
+    formulario.append("audio", { uri: audio.uri, name: audio.nome, type: audio.tipo } as unknown as Blob);
+  }
+  const resposta = await apiPost<{ message: string }>(
+    `/aluno/atividades/${idAtividade}/questoes/${idQuestao}/audio`,
+    formulario
+  );
   return resposta.message;
 }
 

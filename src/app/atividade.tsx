@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from "react-native";
 
 import EstadoVazio from "@/components/estado-vazio";
+import GravadorAudio from "@/components/gravador-audio";
 import TelaComAbas from "@/components/tela-com-abas";
 import {
   AtividadeDetalhe,
@@ -85,7 +86,9 @@ export default function AtividadeScreen() {
     setErroEnvio("");
     setSucesso("");
 
-    const faltando = dados.questoes.filter((q) => !respostas[q.id_questao]?.trim());
+    const faltando = dados.questoes.filter(
+      (q) => q.tipo !== "audio" && !respostas[q.id_questao]?.trim()
+    );
     if (faltando.length > 0) {
       setErroEnvio(
         `Responda todas as questões antes de enviar (falta${faltando.length > 1 ? "m" : ""}: ${faltando
@@ -257,6 +260,15 @@ export default function AtividadeScreen() {
                 </Pressable>
               );
             })
+          ) : questao.tipo === "audio" ? (
+            <GravadorAudio
+              idAtividade={dados.id_atividade}
+              idQuestao={questao.id_questao}
+              numero={questao.numero}
+              urlRespostaAudio={questao.url_resposta_audio}
+              podeEditar={podeEditar}
+              onEnviado={carregar}
+            />
           ) : (
             <TextInput
               style={atividadeStyles.campoTexto}
@@ -286,7 +298,7 @@ export default function AtividadeScreen() {
       {erroEnvio ? <Text style={atividadeStyles.txtErro}>{erroEnvio}</Text> : null}
       {sucesso ? <Text style={atividadeStyles.txtSucesso}>{sucesso}</Text> : null}
 
-      {podeEditar && dados.questoes.length > 0 && (
+      {podeEditar && dados.questoes.some((q) => q.tipo !== "audio") && (
         <Pressable
           style={[atividadeStyles.btnEnviar, enviando && atividadeStyles.btnEnviarDesabilitado]}
           onPress={enviar}
