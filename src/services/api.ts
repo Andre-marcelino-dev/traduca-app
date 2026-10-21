@@ -371,13 +371,26 @@ export function buscarAgenda() {
   return apiGet<Agenda>("/aluno/agenda");
 }
 
-// Modal "Solicitar reagendamento". Devolve a mensagem de sucesso da API.
-export async function solicitarReagendamento(idAula: number, motivo: string): Promise<string> {
+// Modal "Solicitar reagendamento". dataSugerida: "AAAA-MM-DD HH:MM", opcional.
+// Devolve a mensagem de sucesso da API.
+export async function solicitarReagendamento(
+  idAula: number,
+  motivo: string,
+  dataSugerida?: string
+): Promise<string> {
   const resposta = await apiPost<{ message: string }>("/aluno/reagendamento/solicitar", {
     aula_id: idAula,
     motivo,
+    ...(dataSugerida ? { data_sugerida: dataSugerida } : {}),
   });
   return resposta.message;
+}
+
+export type SugestaoHorario = { data: string; hora: string };
+
+// Até 3 horários livres do professor dessa aula (mesmo horário, sem choque na agenda dele).
+export function buscarSugestoesReagendamento(idAula: number) {
+  return apiGet<{ sugestoes: SugestaoHorario[] }>(`/aluno/reagendamento/${idAula}/sugestoes`);
 }
 
 export type StatusAtividade = "pendente" | "enviada" | "corrigida";

@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
 
-import { Alert, Image, Modal, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Modal, Pressable, Text, TextInput, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
-import { AulaAgenda, solicitarReagendamento } from "@/services/api";
+import {
+  AulaAgenda,
+  buscarSugestoesReagendamento,
+  solicitarReagendamento,
+  SugestaoHorario,
+} from "@/services/api";
 import modalReagendamentoStyle from "@/styles/modalReagendamentoStyle";
 import { cores } from "@/styles/variaveis";
 
@@ -32,6 +37,16 @@ function dataResumida(aula: AulaAgenda): string {
   return aula.hora ? `${dia}/${mes}, ${aula.hora}` : `${dia}/${mes}`;
 }
 
+// { data: "2026-11-02", hora: "19:00" } → "02/11 · 19:00".
+function textoSugestao(sugestao: SugestaoHorario): string {
+  const [, mes, dia] = sugestao.data.split("-");
+  return `${dia}/${mes} · ${sugestao.hora}`;
+}
+
+function mesmaSugestao(a: SugestaoHorario | null, b: SugestaoHorario): boolean {
+  return !!a && a.data === b.data && a.hora === b.hora;
+}
+
 export default function ModalReagendamento({
   visible,
   aulas,
@@ -44,14 +59,42 @@ export default function ModalReagendamento({
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
 
+  const [sugestoes, setSugestoes] = useState<SugestaoHorario[]>([]);
+  const [carregandoSugestoes, setCarregandoSugestoes] = useState(false);
+  const [sugestaoEscolhida, setSugestaoEscolhida] = useState<SugestaoHorario | null>(null);
+
   // Reseta o formulário toda vez que o modal é reaberto.
   useEffect(() => {
     if (visible) {
       setAulaSelecionada(aulaInicial);
       setMotivo("");
       setErro("");
+      setSugestoes([]);
+      setSugestaoEscolhida(null);
     }
   }, [visible, aulaInicial]);
+
+  // Busca os horários sugeridos toda vez que a aula escolhida muda.
+  useEffect(() => {
+    if (!visible || !aulaSelecionada) return;
+    let ativo = true;
+    setSugestoes([]);
+    setSugestaoEscolhida(null);
+    setCarregandoSugestoes(true);
+    buscarSugestoesReagendamento(aulaSelecionada.id_aula)
+      .then((dados) => {
+        if (ativo) setSugestoes(dados.sugestoes);
+      })
+      .catch(() => {
+        // Sem sugestão não impede o aluno de escrever o motivo e enviar.
+      })
+      .finally(() => {
+        if (ativo) setCarregandoSugestoes(false);
+      });
+    return () => {
+      ativo = false;
+    };
+  }, [visible, aulaSelecionada]);
 
   const motivoValido = motivo.trim().length >= MOTIVO_MIN;
 
@@ -69,7 +112,10 @@ export default function ModalReagendamento({
 
     setEnviando(true);
     try {
-      const mensagem = await solicitarReagendamento(aulaSelecionada.id_aula, motivo.trim());
+      const dataSugerida = sugestaoEscolhida
+        ? `${sugestaoEscolhida.data} ${sugestaoEscolhida.hora}`
+        : undefined;
+      const mensagem = await solicitarReagendamento(aulaSelecionada.id_aula, motivo.trim(), dataSugerida);
       Alert.alert("Solicitação enviada", mensagem);
       onClose();
     } catch (e) {
@@ -139,6 +185,53 @@ export default function ModalReagendamento({
               />
             </Pressable>
           </View>
+
+          {aulaSelecionada && (
+            <View style={modalReagendamentoStyle.campo}>
+              <View style={modalReagendamentoStyle.campoLabelLinha}>
+                <Image
+                  source={require("@/assets/images/imgIcon/relogio-azul.png")}
+                  style={modalReagendamentoStyle.campoLabelIcone}
+                />
+                <Text style={modalReagendamentoStyle.campoLabelTexto}>
+                  Horário sugerido (opcional)
+                </Text>
+              </View>
+
+              {carregandoSugestoes ? (
+                <ActivityIndicator color={cores.azul} style={{ alignSelf: "flex-start" }} />
+              ) : sugestoes.length > 0 ? (
+                <View style={modalReagendamentoStyle.sugestaoLinha}>
+                  {sugestoes.map((sugestao) => {
+                    const selecionada = mesmaSugestao(sugestaoEscolhida, sugestao);
+                    return (
+                      <Pressable
+                        key={`${sugestao.data}-${sugestao.hora}`}
+                        style={[
+                          modalReagendamentoStyle.sugestaoChip,
+                          selecionada && modalReagendamentoStyle.sugestaoChipSelecionado,
+                        ]}
+                        onPress={() => setSugestaoEscolhida(selecionada ? null : sugestao)}
+                      >
+                        <Text
+                          style={[
+                            modalReagendamentoStyle.sugestaoChipTexto,
+                            selecionada && modalReagendamentoStyle.sugestaoChipTextoSelecionado,
+                          ]}
+                        >
+                          {textoSugestao(sugestao)}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ) : (
+                <Text style={modalReagendamentoStyle.sugestaoTextoAuxiliar}>
+                  Sem horário livre do professor nos próximos dias — explique no motivo.
+                </Text>
+              )}
+            </View>
+          )}
 
           <View style={modalReagendamentoStyle.campo}>
             <View style={modalReagendamentoStyle.campoLabelLinha}>
