@@ -255,6 +255,41 @@ const modalReagendamentoStyle = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 18,
   },
+
+  // Sugestões de horário (até 3, calculadas pela agenda do professor).
+  sugestaoLinha: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+
+  sugestaoChip: {
+    borderWidth: 2,
+    borderColor: cores.cinza,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+
+  sugestaoChipSelecionado: {
+    borderColor: cores.azul,
+    backgroundColor: `${cores.azul}12`,
+  },
+
+  sugestaoChipTexto: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: cores.cinzaEscuro,
+  },
+
+  sugestaoChipTextoSelecionado: {
+    color: cores.azul,
+  },
+
+  sugestaoTextoAuxiliar: {
+    fontSize: 11,
+    color: cores.cinzaEscuro,
+  },
 });
 
 export default modalReagendamentoStyle;
