@@ -4,10 +4,13 @@ import { useState } from "react";
 import { Image, Pressable, Switch, Text, View } from "react-native";
 
 import AlterarSenhaModal from "@/components/alterar-senha-modal";
+import ModalAndroid from "@/components/modal-android";
+import ModalDesktop from "@/components/modal-desktop";
 import ModalIphone from "@/components/modal-iphone";
 import TelaComAbas from "@/components/tela-com-abas";
 import configStyles from "@/styles/configStyles";
 import { fotoAlunoUrl, logoutAluno, primeiroNomeAluno } from "@/services/api";
+import { usePromptInstalarPwa } from "@/services/pwa-instalar";
 import { cores } from "@/styles/variaveis";
 
 type ItemConfig = {
@@ -90,6 +93,13 @@ function ItemLista({ item }: { item: ItemConfig }) {
 export default function ConfigScreen() {
   const [modalAlterarSenhaVisivel, setModalAlterarSenhaVisivel] = useState(false);
   const [modalIphoneVisivel, setModalIphoneVisivel] = useState(false);
+  const [modalAndroidVisivel, setModalAndroidVisivel] = useState(false);
+  const [modalDesktopVisivel, setModalDesktopVisivel] = useState(false);
+  const {
+    disponivel: instalacaoPwaDisponivel,
+    instalar: instalarPwa,
+    plataforma: plataformaPwa,
+  } = usePromptInstalarPwa();
   const foto = fotoAlunoUrl();
 
   return (
@@ -148,7 +158,15 @@ export default function ConfigScreen() {
         <Text style={configStyles.secaoTitulo}>App</Text>
         {appItens.map((item) => {
           const onPress =
-            item.titulo === "Instalar aplicativo" ? () => setModalIphoneVisivel(true) : undefined;
+            item.titulo === "Instalar aplicativo"
+              ? instalacaoPwaDisponivel
+                ? instalarPwa
+                : plataformaPwa === "android"
+                  ? () => setModalAndroidVisivel(true)
+                  : plataformaPwa === "ios"
+                    ? () => setModalIphoneVisivel(true)
+                    : () => setModalDesktopVisivel(true)
+              : undefined;
 
           return <ItemLista key={item.titulo} item={{ ...item, onPress }} />;
         })}
@@ -185,6 +203,16 @@ export default function ConfigScreen() {
       <ModalIphone
         visible={modalIphoneVisivel}
         onClose={() => setModalIphoneVisivel(false)}
+      />
+
+      <ModalAndroid
+        visible={modalAndroidVisivel}
+        onClose={() => setModalAndroidVisivel(false)}
+      />
+
+      <ModalDesktop
+        visible={modalDesktopVisivel}
+        onClose={() => setModalDesktopVisivel(false)}
       />
     </TelaComAbas>
   );

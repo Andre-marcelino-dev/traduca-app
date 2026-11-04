@@ -21,7 +21,16 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Traduca",
+      "shortName": "Traduca",
+      "lang": "pt-BR",
+      "description": "App de alunos do Traduca Idiomas: aulas, materiais, atividades e desempenho do curso.",
+      "display": "standalone",
+      "startUrl": "/",
+      "orientation": "portrait",
+      "themeColor": "#1B2CC1",
+      "backgroundColor": "#ffffff"
     },
     "plugins": [
       "expo-router",
