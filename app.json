@@ -11,6 +11,8 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "br.com.traduca.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -55,6 +57,12 @@
         "expo-audio",
         {
           "microphonePermission": "O Traduca usa o microfone para você gravar a resposta das atividades de áudio."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#1B2CC1"
         }
       ]
     ],

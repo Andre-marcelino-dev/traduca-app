@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "145092220903",
+    "project_id": "traduca-d6517",
+    "storage_bucket": "traduca-d6517.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145092220903:android:f46681281ef711a2580f42",
+        "android_client_info": {
+          "package_name": "br.com.traduca.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBx0OlZ9Srtgqqe6W4JWzs2x_iYnxiNnEU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
