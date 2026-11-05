@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 
-import { View, Text, Image, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Image, TextInput, Pressable, ActivityIndicator, useWindowDimensions } from "react-native";
 
 import globalStyle from "@/styles/globalStyles";
 import redefinirSenhaStyle from "@/styles/redefinirSenhaStyle";
@@ -9,6 +9,9 @@ import { redefinirSenha } from "@/services/api";
 
 export default function RedefinirSenhaScreen() {
   const { email: emailParam } = useLocalSearchParams<{ email?: string }>();
+  // Calculado a partir da largura real da tela (ver loginStyles.form / index.tsx).
+  const { width: larguraTela } = useWindowDimensions();
+  const larguraForm = Math.min(larguraTela * 0.9, 400);
 
   const [email, setEmail] = useState(emailParam ?? "");
   const [codigo, setCodigo] = useState("");
@@ -47,7 +50,7 @@ export default function RedefinirSenhaScreen() {
         <View style={redefinirSenhaStyle.conteudo}>
           <Text style={redefinirSenhaStyle.titulo}>Senha redefinida!</Text>
           <Text style={redefinirSenhaStyle.subtitulo}>Faça login com a sua nova senha.</Text>
-          <View style={redefinirSenhaStyle.form}>
+          <View style={[redefinirSenhaStyle.form, { width: larguraForm }]}>
             <Pressable
               style={({ pressed }) => [
                 redefinirSenhaStyle.btnEntrar,
@@ -77,7 +80,7 @@ export default function RedefinirSenhaScreen() {
       <Text style={redefinirSenhaStyle.titulo}>Redefinir senha</Text>
       <Text style={redefinirSenhaStyle.subtitulo}>Crie uma nova senha para entrar na sua conta</Text>
 
-              <View style={redefinirSenhaStyle.form}>
+              <View style={[redefinirSenhaStyle.form, { width: larguraForm }]}>
 
               <View style={redefinirSenhaStyle.input}>
                   <Image

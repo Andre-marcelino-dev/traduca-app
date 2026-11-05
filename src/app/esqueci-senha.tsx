@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 
-import { View, Text, Image, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Image, TextInput, Pressable, ActivityIndicator, useWindowDimensions } from "react-native";
 
 import globalStyle from "@/styles/globalStyles";
 import esqueciSenhaStyle from "@/styles/esqueciSenhaStyle";
@@ -9,6 +9,9 @@ import EnviarLinkModal from "@/components/linkSenhaModal";
 import { esqueciSenha } from "@/services/api";
 
 export default function EsqueciSenhaScreen() {
+  // Calculado a partir da largura real da tela (ver loginStyles.form / index.tsx).
+  const { width: larguraTela } = useWindowDimensions();
+  const larguraForm = Math.min(larguraTela * 0.9, 400);
   const [email, setEmail] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
@@ -45,7 +48,7 @@ export default function EsqueciSenhaScreen() {
       <Text>Informe seu e-mail para receber o código de redefinição de senha</Text>
 
                     {/* Formulario de login */}
-              <View style={esqueciSenhaStyle.form}>
+              <View style={[esqueciSenhaStyle.form, { width: larguraForm }]}>
                 <View style={esqueciSenhaStyle.input}>
                   <Image
                     source={require("@/assets/images/imgIcon/email-azul.png")}

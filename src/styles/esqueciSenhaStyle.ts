@@ -3,6 +3,7 @@ import { cores } from "./variaveis";
 
 const esqueciSenhaStyle = StyleSheet.create({
     conteudo: {
+        width: "100%",
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
@@ -25,8 +26,6 @@ const esqueciSenhaStyle = StyleSheet.create({
         color: cores.cinzaEscuro,
       },
       form: {
-        width: "90%",
-        maxWidth: 400,
         marginTop: 20,
         alignItems: "center",
       },

@@ -1,13 +1,17 @@
 import { Redirect, router } from "expo-router";
 import { useState } from "react";
 
-import { View, Text, Image, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Image, TextInput, Pressable, ActivityIndicator, useWindowDimensions } from "react-native";
 
 import globalStyle from "@/styles/globalStyles";
 import loginStyles from "@/styles/loginStyles";
 import { loginAluno, sessao } from "@/services/api";
 
 export default function LoginScreen() {
+  // Calculado a partir da largura real da tela (em vez de "%", que em alguns
+  // aparelhos estava vazando pra fora, veja loginStyles.form).
+  const { width: larguraTela } = useWindowDimensions();
+  const larguraForm = Math.min(larguraTela * 0.9, 400);
   const [verSenha, setVerSenha] = useState(false);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -59,7 +63,7 @@ export default function LoginScreen() {
       <Text>Faça seu login para continuar</Text>
  
                     {/* Formulario de login */}
-              <View style={loginStyles.form}>
+              <View style={[loginStyles.form, { width: larguraForm }]}>
                 <View style={loginStyles.input}>
                   <Image
                     source={require("@/assets/images/imgIcon/email-azul.png")}
