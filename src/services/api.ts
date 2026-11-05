@@ -584,6 +584,12 @@ export async function marcarTodasNotificacoesLidas(): Promise<void> {
   await apiPost("/aluno/notificacoes/lidas", {});
 }
 
+// Notificações push: guarda (ou apaga, mandando null) o token do aparelho
+// pro servidor avisar o aluno mesmo com o app fechado.
+export async function salvarPushToken(token: string | null): Promise<void> {
+  await apiPut("/aluno/push-token", { push_token: token });
+}
+
 // Nome do módulo para a tela: se já foi cadastrado como "Módulo 01: ...", usa como está;
 // senão monta "Módulo Fundamentos 01".
 export function tituloModulo(nome: string, ordem: number): string {

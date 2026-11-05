@@ -1,7 +1,7 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { Image, Pressable, Switch, Text, View } from "react-native";
+import { Image, Platform, Pressable, Switch, Text, View } from "react-native";
 
 import AlterarSenhaModal from "@/components/alterar-senha-modal";
 import ModalAndroid from "@/components/modal-android";
@@ -10,6 +10,8 @@ import ModalIphone from "@/components/modal-iphone";
 import TelaComAbas from "@/components/tela-com-abas";
 import configStyles from "@/styles/configStyles";
 import { fotoAlunoUrl, logoutAluno, primeiroNomeAluno } from "@/services/api";
+import { ativarNotificacoesPush, desativarNotificacoesPush } from "@/services/notificacoes-push";
+import { notificacoesEstaoAtivas, salvarPreferenciaNotificacoes } from "@/services/preferencia-notificacoes";
 import { usePromptInstalarPwa } from "@/services/pwa-instalar";
 import { cores } from "@/styles/variaveis";
 
@@ -19,6 +21,8 @@ type ItemConfig = {
   icone: number;
   acao: "seta" | "instalar" | "notificacao";
   onPress?: () => void;
+  valorSwitch?: boolean;
+  onToggleSwitch?: (valor: boolean) => void;
 };
 
 const minhaConta: ItemConfig[] = [
@@ -52,8 +56,6 @@ const appItens: ItemConfig[] = [
 ];
 
 function ItemLista({ item }: { item: ItemConfig }) {
-  const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
-
   return (
     <Pressable style={configStyles.itemCard} onPress={item.onPress}>
       <View style={configStyles.itemIconeBox}>
@@ -80,8 +82,8 @@ function ItemLista({ item }: { item: ItemConfig }) {
 
       {item.acao === "notificacao" && (
         <Switch
-          value={notificacoesAtivas}
-          onValueChange={setNotificacoesAtivas}
+          value={item.valorSwitch ?? true}
+          onValueChange={item.onToggleSwitch}
           trackColor={{ false: cores.cinza, true: cores.azul }}
           thumbColor={cores.branco}
         />
@@ -95,12 +97,32 @@ export default function ConfigScreen() {
   const [modalIphoneVisivel, setModalIphoneVisivel] = useState(false);
   const [modalAndroidVisivel, setModalAndroidVisivel] = useState(false);
   const [modalDesktopVisivel, setModalDesktopVisivel] = useState(false);
+  const [notificacoesAtivas, setNotificacoesAtivas] = useState(true);
   const {
     disponivel: instalacaoPwaDisponivel,
     instalar: instalarPwa,
     plataforma: plataformaPwa,
   } = usePromptInstalarPwa();
   const foto = fotoAlunoUrl();
+
+  useEffect(() => {
+    notificacoesEstaoAtivas().then(setNotificacoesAtivas);
+  }, []);
+
+  async function alternarNotificacoes(ativar: boolean) {
+    setNotificacoesAtivas(ativar);
+    await salvarPreferenciaNotificacoes(ativar);
+
+    if (ativar) {
+      // No navegador, notificação push ainda não existe — deixa o interruptor
+      // ligado mesmo assim (não é permissão negada, é um recurso que só
+      // existe no celular por enquanto).
+      const deuCerto = Platform.OS === "web" || (await ativarNotificacoesPush());
+      if (!deuCerto) setNotificacoesAtivas(false);
+    } else {
+      await desativarNotificacoesPush();
+    }
+  }
 
   return (
     <TelaComAbas
@@ -168,7 +190,12 @@ export default function ConfigScreen() {
                     : () => setModalDesktopVisivel(true)
               : undefined;
 
-          return <ItemLista key={item.titulo} item={{ ...item, onPress }} />;
+          const extras =
+            item.titulo === "Ativar notificações"
+              ? { valorSwitch: notificacoesAtivas, onToggleSwitch: alternarNotificacoes }
+              : {};
+
+          return <ItemLista key={item.titulo} item={{ ...item, onPress, ...extras }} />;
         })}
       </View>
 
