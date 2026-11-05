@@ -1,5 +1,6 @@
 import { router, usePathname } from "expo-router";
 import { Image, Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import tabBarStyles from "@/styles/tabBarStyles";
 import { cores } from "@/styles/variaveis";
@@ -34,9 +35,13 @@ const abas = [
 
 export default function TabBarInferior() {
   const pathname = usePathname();
+  // A tela só reserva a área segura do topo (ver tela-com-abas.tsx); aqui
+  // somamos a área segura de baixo (barra de gestos do Android) pra legenda
+  // das abas não ficar embaixo do sistema.
+  const { bottom } = useSafeAreaInsets();
 
   return (
-    <View style={tabBarStyles.container}>
+    <View style={[tabBarStyles.container, { paddingBottom: 10 + bottom }]}>
       {abas.map((aba) => {
         const ativa =
           pathname === aba.rota ||

@@ -25,12 +25,12 @@ const loginStyles = StyleSheet.create({
     color: cores.cinzaEscuro,
   },
   form: {
-    width: 350,
+    width: "90%",
+    maxWidth: 400,
     marginTop: 20,
     alignItems: "center",
-    paddingHorizontal: "5%",
   },
- 
+
   input: {
     height: 50,
     flexDirection: "row",
@@ -38,7 +38,7 @@ const loginStyles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 10,
     padding: 10,
-    width: 350,
+    width: "100%",
     marginVertical: 10,
     justifyContent: "space-between",
   },
