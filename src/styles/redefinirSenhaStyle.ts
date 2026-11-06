@@ -33,6 +33,7 @@ const redefinirSenhaStyle = StyleSheet.create({
   input: {
     height: 50,
     flexDirection: "row",
+    alignItems: "center",
     backgroundColor: cores.cinza,
     borderWidth: 2,
     borderRadius: 10,
@@ -50,6 +51,8 @@ const redefinirSenhaStyle = StyleSheet.create({
  
   TextInput: {
     flex: 1,
+    textAlignVertical: "center",
+    paddingVertical: 0,
   },
  
   btnMostrarSenha: {
