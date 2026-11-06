@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import SinoNotificacoes from "@/components/sino-notificacoes";
 import homeStyles from "@/styles/homeStyles";
@@ -42,6 +42,9 @@ const menuItens = [
 
 export default function HomeScreen() {
   const foto = fotoAlunoUrl();
+  // A tela só reserva a área segura do topo; aqui somamos a de baixo (barra
+  // de gestos do Android) pro botão flutuante não ficar embaixo do sistema.
+  const { bottom } = useSafeAreaInsets();
 
   return (
     <SafeAreaView style={homeStyles.container} edges={["top"]}>
@@ -89,6 +92,7 @@ export default function HomeScreen() {
       <Pressable
         style={({ pressed }) => [
           homeStyles.btnAssistente,
+          { bottom: 24 + bottom },
           pressed && homeStyles.btnAssistentePressed,
         ]}
         onPress={() => router.navigate("/assistente")}
