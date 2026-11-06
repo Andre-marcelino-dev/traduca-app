@@ -49,7 +49,7 @@ const esqueciSenhaStyle = StyleSheet.create({
       },
      
       TextInput: {
-        width: "100%",
+        flex: 1,
       },
      
       btnMostrarSenha: {
