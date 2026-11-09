@@ -134,7 +134,7 @@ export default function GravadorAudio({
         await enviarRespostaAudio(idAtividade, idQuestao, {
           uri: uriLocal,
           nome: "resposta.m4a",
-          tipo: "audio/m4a",
+          tipo: "audio/mp4",
         });
       }
       setUriLocal(null);
