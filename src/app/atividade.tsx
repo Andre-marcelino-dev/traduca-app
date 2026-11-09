@@ -93,8 +93,8 @@ export default function AtividadeScreen() {
     setErroEnvio("");
     setSucesso("");
 
-    const faltando = dados.questoes.filter(
-      (q) => q.tipo !== "audio" && !respostas[q.id_questao]?.trim()
+    const faltando = dados.questoes.filter((q) =>
+      q.tipo === "audio" ? !q.url_resposta_audio : !respostas[q.id_questao]?.trim()
     );
     if (faltando.length > 0) {
       setErroEnvio(
