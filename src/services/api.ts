@@ -1,5 +1,6 @@
 // Comunicação do app com a API do Traduca (backend Laravel).
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FileSystemUploadType, uploadAsync } from "expo-file-system/legacy";
 import { router } from "expo-router";
 
 import { apagarToken, guardarToken, lerToken } from "@/services/cofre";
@@ -461,18 +462,45 @@ export async function enviarRespostaAudio(
   idQuestao: number,
   audio: { uri: string; nome: string; tipo: string; arquivoWeb?: Blob }
 ): Promise<string> {
-  const formulario = new FormData();
+  const caminho = `/aluno/atividades/${idAtividade}/questoes/${idQuestao}/audio`;
   if (audio.arquivoWeb) {
+    const formulario = new FormData();
     formulario.append("audio", audio.arquivoWeb, audio.nome);
-  } else {
-    // No celular o React Native aceita { uri, name, type } no lugar do arquivo.
-    formulario.append("audio", { uri: audio.uri, name: audio.nome, type: audio.tipo } as unknown as Blob);
+    const resposta = await apiPost<{ message: string }>(caminho, formulario);
+    return resposta.message;
   }
-  const resposta = await apiPost<{ message: string }>(
-    `/aluno/atividades/${idAtividade}/questoes/${idQuestao}/audio`,
-    formulario
-  );
-  return resposta.message;
+
+  // No celular, o FormData do React Native falhava no Android ("Sem conexão")
+  // com a gravação; o envio de arquivo do próprio Expo lê o arquivo direto do disco.
+  let resultado: { status: number; body: string };
+  try {
+    resultado = await uploadAsync(`${API_URL}${caminho}`, audio.uri, {
+      httpMethod: "POST",
+      uploadType: FileSystemUploadType.MULTIPART,
+      fieldName: "audio",
+      mimeType: audio.tipo,
+      headers: { Accept: "application/json", Authorization: `Bearer ${sessao.token}` },
+    });
+  } catch (e) {
+    const motivo = e instanceof Error && e.message ? ` (${e.message})` : "";
+    throw new Error(`Não foi possível enviar a gravação${motivo}. Verifique sua internet.`);
+  }
+
+  let json: { success?: boolean; message?: string } | null = null;
+  try {
+    json = JSON.parse(resultado.body);
+  } catch {
+    json = null;
+  }
+  if (resultado.status === 401) {
+    await limparSessao();
+    router.replace("/");
+    throw new Error(mensagemSaida(json));
+  }
+  if (resultado.status < 200 || resultado.status >= 300 || !json?.success) {
+    throw new Error(json?.message ?? `Não foi possível enviar a gravação (erro ${resultado.status}).`);
+  }
+  return json.message ?? "Gravação enviada.";
 }
 
 export type Duvida = {
