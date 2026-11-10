@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 
-import { Image, Platform, Pressable, Switch, Text, View } from "react-native";
+import { Image, Linking, Platform, Pressable, Switch, Text, View } from "react-native";
 
 import AlterarSenhaModal from "@/components/alterar-senha-modal";
 import ModalAndroid from "@/components/modal-android";
@@ -9,7 +9,7 @@ import ModalDesktop from "@/components/modal-desktop";
 import ModalIphone from "@/components/modal-iphone";
 import TelaComAbas from "@/components/tela-com-abas";
 import configStyles from "@/styles/configStyles";
-import { fotoAlunoUrl, logoutAluno, primeiroNomeAluno } from "@/services/api";
+import { fotoAlunoUrl, logoutAluno, primeiroNomeAluno, SITE_URL } from "@/services/api";
 import { ativarNotificacoesPush, desativarNotificacoesPush } from "@/services/notificacoes-push";
 import { notificacoesEstaoAtivas, salvarPreferenciaNotificacoes } from "@/services/preferencia-notificacoes";
 import { usePromptInstalarPwa } from "@/services/pwa-instalar";
@@ -54,6 +54,11 @@ const appItens: ItemConfig[] = [
     acao: "notificacao",
   },
 ];
+
+// Arquivo .apk hospedado no mesmo servidor do site (fora do Git — grande e
+// binário). Pra atualizar, é só substituir esse arquivo no servidor; o link
+// nunca muda.
+const URL_APK_ANDROID = `${SITE_URL}/traducaidiomas/app/traduca.apk`;
 
 function ItemLista({ item }: { item: ItemConfig }) {
   return (
@@ -197,6 +202,18 @@ export default function ConfigScreen() {
 
           return <ItemLista key={item.titulo} item={{ ...item, onPress, ...extras }} />;
         })}
+
+        {Platform.OS === "web" && plataformaPwa !== "ios" && (
+          <ItemLista
+            item={{
+              titulo: "Baixar aplicativo Android",
+              subtitulo: "Baixe o arquivo .apk direto (sem precisar da Play Store)",
+              icone: require("@/assets/images/imgIcon/download-azul.png"),
+              acao: "seta",
+              onPress: () => Linking.openURL(URL_APK_ANDROID),
+            }}
+          />
+        )}
       </View>
 
       <View style={configStyles.secao}>
